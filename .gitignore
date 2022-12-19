@@ -1,0 +1,8 @@
+# exclude all directories 
+/*
+
+# include paticular files and directories
+!LICENSE
+!README.md
+!.gitignore
+!nvim/
