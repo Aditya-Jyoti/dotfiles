@@ -19,5 +19,5 @@ x = 10
 y = 10
 
 [general]
-import = ["~/.cache/wal/alacritty.toml"]
+import = ["~/.cache/wal/colors-alacritty.toml"]
 
