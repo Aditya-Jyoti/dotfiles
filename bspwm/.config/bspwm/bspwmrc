@@ -1,5 +1,16 @@
 #!/usr/bin/env sh
 
+# kill all startup programs
+killall -q sxhkd picom polybar dunst greenclip 
+
+# application startup
+sxhkd & # & makes it work async
+picom -b &
+dunst &
+greenclip daemon &
+
+"$HOME/.config/polybar/launch.sh"
+
 ### ===============================
 ### Environment
 ### ===============================
@@ -38,9 +49,5 @@ bspc config focused_border_color "$color4"
 
 bspc rule -a iwgtk state=floating
 
-### ===============================
-### Startup Programs
-### ===============================
 
-"$HOME/.config/bspwm/autostart.sh"
 
