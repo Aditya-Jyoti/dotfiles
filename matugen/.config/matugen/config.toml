@@ -8,4 +8,3 @@ output_path = "~/.cache/matugen/alacritty.toml"
 [templates.neovim]
 input_path = "~/.config/matugen/templates/nvim.lua"
 output_path = '~/.cache/matugen/generated.lua'
-post_hook = 'pkill -SIGUSR1 nvim'
