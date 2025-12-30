@@ -18,3 +18,8 @@ input_path = "~/.config/matugen/templates/spicetify.ini"
 output_path = "~/.config/spicetify/Themes/matugen/color.ini"
 post_hook = "spicetify apply"
 
+[templates.vscode]
+input_path = "~/.config/matugen/templates/vscode.json"
+output_path = "~/.cache/matugen/vscode.json"
+post_hook = "jq -s '.[0] * .[1]' ~/.config/Code/User/settings.json ~/.cache/matugen/vscode.json > temp.json && mv temp.json ~/.config/Code/User/settings.json"
+
