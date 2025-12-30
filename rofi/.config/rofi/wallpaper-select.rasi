@@ -1,0 +1,101 @@
+/*****----- Configuration -----*****/
+configuration {
+    modi: "drun";
+    show-icons: true;
+    drun-display-format: "";
+    font: "FiraCode Nerd Font 16px";
+}
+
+/*****----- Matugen Colors -----*****/
+@import "~/.cache/matugen/rofi.rasi"
+
+/*****----- Global Defaults -----*****/
+* {
+    background-color: transparent;
+    text-color: @on-surface;
+}
+
+/*****----- Window -----*****/
+window {
+    transparency: "real";
+    location: center;
+    anchor: center;
+
+    width: 600px;
+    height: 400px;
+
+    margin: 0px;
+    padding: 0px;
+
+    border: 1px solid;
+    border-radius: 10px;
+    border-color: @primary;
+
+    background-color: @surface;
+}
+
+/*****----- Mainbox -----*****/
+mainbox {
+    padding: 20px;
+    spacing: 10px;
+    background-color: @surface;
+    children: [ listview ];
+}
+
+/*****----- Listview (GRID) -----*****/
+listview {
+    columns: 5;
+    lines: 2;
+
+    fixed-columns: true;
+    fixed-height: true;
+
+    spacing: 16px;
+    padding: 0px;
+
+    layout: vertical;
+    scrollbar: false;
+    cycle: true;
+
+    background-color: transparent;
+}
+
+/*****----- Element (ICON CARD) -----*****/
+element {
+    expand: true;
+    padding: 0px;
+    border-radius: 10px;
+    background-color: @surface-container;
+    cursor: pointer;
+
+    children: [ element-icon ];
+}
+
+/*****----- Alternate (subtle variation) -----*****/
+element alternate.normal {
+    background-color: @surface-container-high;
+}
+
+/*****----- Selected -----*****/
+element selected.normal {
+    background-color: @primary;
+    border: 2px solid;
+    border-radius: 10px;
+    border-color: @primary;
+
+}
+
+/*****----- Icon -----*****/
+element-icon {
+    expand: true;
+    size: 96px;
+    border-radius: 8px;
+    vertical-align: 0.5;
+    horizontal-align: 0.5;
+}
+
+/*****----- Disable Text Completely -----*****/
+element-text {
+    enabled: false;
+}
+
