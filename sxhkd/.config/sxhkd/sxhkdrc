@@ -1,0 +1,182 @@
+#! /bin/sh
+
+#################################################
+# ROFI / LAUNCHERS
+#################################################
+
+# App launcher
+alt + space
+    rofi -show drun
+
+# Clipboard (greenclip)
+super + bracketleft
+    rofi -modi " :greenclip print" -show " " -run-command '{cmd}'
+
+# Calculator
+super + bracketright
+    roficalc
+
+# Project / Academic launchers
+super + p
+    project_opener
+
+super + o
+    academic_opener
+
+# Wallpaper 
+super + w
+    wallpaper-picker
+
+# Quick Notes
+super + backslash
+    notetaking
+
+#################################################
+# SCRATCHPADS / APPLICATIONS
+#################################################
+
+# Terminal file explorer
+super + e
+    scratchpad Explorer 'alacritty --class Explorer --title "Explorer" -e spf'
+
+# Spotify
+{KP_7,KP_Home}
+    scratchpad Spotify 'spotify'
+
+# WhatsApp
+{KP_8,KP_Up}
+    scratchpad whatsapp 'brave --app=https://web.whatsapp.com'
+
+# Obsidian
+{KP_9,KP_Prior}
+    scratchpad Obsidian 'obsidian'
+
+#################################################
+# SYSTEM / UTILITIES
+#################################################
+
+# Screenshot
+Print
+    shot
+
+super + shift + s
+    shot
+
+# Gnome screenshot (selection / UI)
+{KP_1,KP_End}
+    gnome-screenshot
+
+
+#################################################
+# LOCK / POWER
+#################################################
+
+super + Home
+    screenlocker
+
+#################################################
+# TERMINAL
+#################################################
+
+super + Return
+    alacritty
+
+super + grave
+    alacritty
+
+#################################################
+# BSPWM — DESKTOP & WINDOW MANAGEMENT
+#################################################
+
+# Move window to desktop (and follow)
+super + shift + {1-9,0}
+    id=$(bspc query -N -n); bspc node -d {1-9,10}; bspc node -f ${id}
+
+# Switch desktops
+super + {1-5}
+    bspc desktop -f {1-5}
+
+# Close focused window
+super + shift + q
+    bspc node -c
+
+# Reload BSPWM
+super + shift + r
+    bspc wm -r
+
+#################################################
+# BSPWM — FOCUS & MOVE
+#################################################
+
+# Vim-style focus / swap
+super + {_,shift} + {h,l,k,j}
+    bspc node -{f,s} {west,east,north,south}
+
+# Arrow key focus
+super + {Left,Right,Up,Down}
+    bspc node -f {west,east,north,south}
+
+#################################################
+# BSPWM — RESIZE
+#################################################
+
+super + shift + {Left,Down,Up,Right}
+    bspc node -z { \
+        left  -30 0 || bspc node -z right -30 0, \
+        bottom 0  30 || bspc node -z top    0  30, \
+        top    0 -30 || bspc node -z bottom 0 -30, \
+        right  30 0 || bspc node -z left   30 0 \
+    }
+
+#################################################
+# BSPWM — STATES
+#################################################
+
+# Toggle floating
+super + space
+    bspc node focused -t \~floating
+
+# Toggle pseudo-tiled
+super + alt + space
+    if [ -z "$(bspc query -N -n focused.pseudo_tiled)" ]; then \
+        bspc node focused -t pseudo_tiled; \
+    else \
+        bspc node focused -t tiled; \
+    fi
+
+# Fullscreen / monocle
+super + f
+    bspc desktop -l next
+
+alt + f
+    bspc node -t \~fullscreen
+
+super + shift + f
+    pbtoggle
+
+# Focus last closed window
+super + Tab
+    bspc node last --focus
+
+#################################################
+# MEDIA KEYS
+#################################################
+
+# Volume
+XF86Audio{Raise,Lower}Volume
+    amixer sset Master 5%{+,-} && \
+    dunstify -t 500 -u low -r 10001 \
+    "Volume: $(pactl get-sink-volume @DEFAULT_SINK@ | awk -F' ' '/%/ {print $5}')"
+
+# Brightness
+XF86MonBrightness{Down,Up}
+    light -{U,A} 10 && \
+    dunstify -t 500 -u low -r 10002 \
+    "Brightness: $(light -G)"
+
+# Media control
+XF86Audio{Play,Pause}
+    playerctl --player=spotify {pause,play}
+
+
+
