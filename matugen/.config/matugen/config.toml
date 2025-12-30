@@ -25,3 +25,7 @@ post_hook = "jq -s '.[0] * .[1]' ~/.config/Code/User/settings.json ~/.cache/matu
 [templates.obsidian]
 input_path = "~/.config/matugen/templates/obsidian.css"
 output_path = "~/Obsidian/.obsidian/snippets/obsidian.css"
+
+[templates.zathura]
+input_path = "~/.config/matugen/templates/zathurarc"
+output_path = "~/.config/zathura/zathurarc"

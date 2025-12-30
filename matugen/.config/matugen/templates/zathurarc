@@ -1,0 +1,100 @@
+#-----------------------------------------------------------------------------
+#Zathura settings
+#-----------------------------------------------------------------------------
+
+#Colors
+set default-bg              "{{colors.surface_container_low.light.hex}}"
+set default-fg              "{{colors.on_background.light.hex}}"
+set statusbar-bg            "{{colors.surface_container_highest.light.hex}}"
+set statusbar-fg            "{{colors.on_surface.light.hex}}"
+set inputbar-bg             "{{colors.surface_container_highest.light.hex}}"
+set inputbar-fg             "{{colors.on_surface.light.hex}}"
+set notification-error-bg   "{{colors.error_container.light.hex}}"
+set notification-error-fg   "{{colors.error.light.hex}}"
+set notification-warning-bg "{{colors.primary_fixed.light.hex}}"
+set notification-warning-fg "{{colors.primary.light.hex}}"
+set highlight-color         "{{colors.primary_fixed.light.hex}}"
+set highlight-active-color  "{{colors.primary_fixed_dim.light.hex}}"
+set completion-highlight-fg "{{colors.on_surface.light.hex}}"
+set completion-highlight-bg "{{colors.primary_fixed_dim.light.hex}}"
+set completion-bg           "{{colors.surface_container_low.light.hex}}"
+set completion-fg           "{{colors.on_surface.light.hex}}"
+set notification-bg         "{{colors.surface_container_highest.light.hex}}"
+set notification-fg         "{{colors.on_surface.light.hex}}"
+set recolor                 "true"
+set recolor-lightcolor      "{{colors.surface_container_low.light.hex}}"
+set recolor-darkcolor       "{{colors.on_background.light.hex}}"
+set recolor-reverse-video   "true"
+set recolor-keephue         "false"
+
+#Clipboard
+set selection-clipboard clipboard
+
+#Search
+set incremental-search true
+set search-hadjust true
+
+#Autoadjust
+set adjust-open width
+
+#Typography
+set font "FiraCode Nerd Font 12"
+
+# One page per row by default
+set pages-per-row 1
+
+#stop at page boundries
+set scroll-page-aware "true"
+set scroll-full-overlap 0.01
+set scroll-step 100
+
+#zoom settings
+set zoom-min 10
+
+# Recolor book content's color
+set recolor                     true
+set recolor-keephue             true      # keep original color
+
+#-----------------------------------------------------------------------------
+#Zathura mappings
+#-----------------------------------------------------------------------------
+
+#remove status bar
+set guioptions none
+
+#Zoom in/out
+map [normal]     K zoom in
+map [normal]     J zoom out
+map [fullscreen] K zoom in
+map [fullscreen] J zoom out
+
+#Toggle mode
+map [normal]     D toggle_page_mode
+map [fullscreen] D toggle_page_mode
+
+#Scroll
+map [normal]     u scroll half-up
+map [normal]     d scroll half-down
+map [fullscreen] u scroll half-up
+map [fullscreen] d scroll half-down
+
+#Fullscreen
+map [normal]     f toggle_fullscreen
+map [fullscreen] f toggle_fullscreen
+
+#Reload
+map [normal]     <C-r> reload
+map [fullscreen] <C-r> reload
+
+#Status bar
+map [normal]     b toggle_statusbar
+map [fullscreen] b toggle_statusbar
+
+#Set width as in mupdf
+map [normal]     H adjust_window best-fit
+map [normal]     W adjust_window width
+map [fullscreen] H adjust_window best-fit
+map [fullscreen] W adjust_window width
+
+map [normal]     i set recolor
+map [fullscreen] i set recolor
