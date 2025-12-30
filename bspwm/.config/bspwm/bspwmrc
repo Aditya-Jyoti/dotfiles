@@ -15,6 +15,12 @@ greenclip daemon &
 ### Environment
 ### ===============================
 
+# Wallpapers
+WALL_CACHE="$HOME/.cache/matugen/current_wallpaper"
+
+[ -f "$WALL_CACHE" ] && setwall "$(cat "$WALL_CACHE")"
+
+
 # ===============================
 # Colors from xrdb (matugen / pywal compatible)
 # ===============================
