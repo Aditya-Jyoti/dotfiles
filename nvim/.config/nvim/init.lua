@@ -22,33 +22,33 @@ source_matugen()
 -- -- Reload on Matugen updates (SIGUSR1)
 -- --------------------------------------------------
 
--- vim.api.nvim_create_autocmd("Signal", {
---   pattern = "SIGUSR1",
---   callback = function()
---     source_matugen()
+vim.api.nvim_create_autocmd("Signal", {
+  pattern = "SIGUSR1",
+  callback = function()
+    source_matugen()
 
---     -- Reload lualine because base16 overrides highlights
---     pcall(function()
---       require("lualine").setup({
---         options = { theme = "base16" },
---       })
---     end)
+    -- Reload lualine because base16 overrides highlights
+    pcall(function()
+      require("lualine").setup({
+        options = { theme = "base16" },
+      })
+    end)
 
---     -- Optional stylistic tweaks
---     vim.api.nvim_set_hl(0, "Comment", { italic = true })
---   end,
--- })
+    -- Optional stylistic tweaks
+    vim.api.nvim_set_hl(0, "Comment", { italic = true })
+  end,
+})
 
---------------------------------------------------
--- Fix lualine inverted colors (keep this)
---------------------------------------------------
+-- --------------------------------------------------
+-- -- Fix lualine inverted colors (keep this)
+-- --------------------------------------------------
 
 vim.api.nvim_set_hl(0, "StatusLine", { reverse = false })
 vim.api.nvim_set_hl(0, "StatusLineNC", { reverse = false })
 
---------------------------------------------------
--- Alacritty integration (unchanged)
---------------------------------------------------
+-- --------------------------------------------------
+-- -- Alacritty integration (unchanged)
+-- --------------------------------------------------
 
 local alacrittyAutoGroup = vim.api.nvim_create_augroup("alacritty", { clear = true })
 
