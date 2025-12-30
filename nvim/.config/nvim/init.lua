@@ -4,36 +4,42 @@ require("core.lazy")
 --------------------------------------------------
 -- Matugen colorscheme loader
 --------------------------------------------------
-
 local function source_matugen()
   local matugen_path = vim.fn.expand("~/.cache/matugen/generated.lua")
-
-  local ok, err = pcall(dofile, matugen_path)
-  if not ok then
-    -- Fallback colorscheme if Matugen hasn’t run yet
-    vim.cmd("colorscheme base16-gruvbox-dark")
+  
+  -- Check if file exists before trying to load it
+  if vim.fn.filereadable(matugen_path) == 1 then
+    local ok, err = pcall(dofile, matugen_path)
+    if not ok then
+      -- Silently fall back without showing error
+      vim.schedule(function()
+        vim.cmd("colorscheme base16-gruvbox-dark")
+      end)
+    end
+  else
+    -- File doesn't exist, use fallback silently
+    vim.schedule(function()
+      vim.cmd("colorscheme base16-gruvbox-dark")
+    end)
   end
 end
 
 -- Load once on startup
 source_matugen()
 
--- --------------------------------------------------
--- -- Reload on Matugen updates (SIGUSR1)
--- --------------------------------------------------
-
+--------------------------------------------------
+-- Reload on Matugen updates (SIGUSR1)
+--------------------------------------------------
 vim.api.nvim_create_autocmd("Signal", {
   pattern = "SIGUSR1",
   callback = function()
     source_matugen()
-
     -- Reload lualine because base16 overrides highlights
     pcall(function()
       require("lualine").setup({
         options = { theme = "base16" },
       })
     end)
-
     -- Optional stylistic tweaks
     vim.api.nvim_set_hl(0, "Comment", { italic = true })
   end,
