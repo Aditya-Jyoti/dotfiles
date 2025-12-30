@@ -15,12 +15,18 @@ greenclip daemon &
 ### Environment
 ### ===============================
 
-# Load pywal colors (dynamic)
-[ -f "$HOME/.cache/wal/colors.sh" ] && . "$HOME/.cache/wal/colors.sh"
+# ===============================
+# Colors from xrdb (matugen / pywal compatible)
+# ===============================
 
-# Fallback colors (in case wal is missing)
-: "${color0:=#1d2021}"
-: "${color4:=#83a598}"
+get_xrdb() {
+  xrdb -query | awk -F: "/\\*$1/ {print \$2}" | tr -d '[:space:]'
+}
+
+color0="$(get_xrdb color0)"
+color1="$(get_xrdb color1)"
+color4="$(get_xrdb color4)"
+
 
 ### ===============================
 ### Monitors & Desktops
