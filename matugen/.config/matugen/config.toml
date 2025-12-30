@@ -33,3 +33,11 @@ output_path = "~/.config/zathura/zathurarc"
 [templates.dunst]
 input_path = "~/.config/matugen/templates/dunstrc"
 output_path = "~/.config/dunst/dunstrc"
+
+[templates.gtk3]
+input_path = "~/.config/matugen/templates/gtk.css"
+output_path = "~/.config/gtk-3.0/gtk.css"
+
+[templates.gtk4]
+input_path = "~/.config/matugen/templates/gtk.css"
+output_path = "~/.config/gtk-4.0/gtk.css"
