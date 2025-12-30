@@ -1,0 +1,34 @@
+// Removes gradient at home
+.main-home-homeHeader
+	background-image: none
+	transition: none
+	background-color: var(--spice-main) !important
+// ... home cards
+.search-searchCategory-contentArea:after
+	background: transparent !important
+.search-searchCategory-contentArea:before
+	background: transparent !important
+// .main-home-content
+// 	--carousel-start-chevron-gradient: 0 !important
+// 	--carousel-end-chevron-gradient: 0 !important
+// ... cover art
+div.cover-art.shadow
+	box-shadow: none
+// ... playlists
+// .main-entityHeader-overlay
+// 	background: none
+// .main-actionBarBackground-background
+// 	background: none !important
+.main-entityHeader-backgroundColor
+	background: none !important
+.playlist-playlist-actionBarBackground-background
+	background: none
+// ... now playing title
+.main-nowPlayingView-contextItemInfo:before
+	background: none !important
+// ... albums
+section > div.main-entityHeader-container + div:empty
+	display: none
+// ... artist pages
+section > div > div.main-entityHeader-container + div > div:empty
+	display: none
