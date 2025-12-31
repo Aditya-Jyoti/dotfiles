@@ -162,11 +162,9 @@ super + Tab
 # MEDIA KEYS
 #################################################
 
-# Volume
 XF86Audio{Raise,Lower}Volume
-    amixer sset Master 5%{+,-} && \
-    dunstify -t 500 -u low -r 10001 \
-    "Volume: $(pactl get-sink-volume @DEFAULT_SINK@ | awk -F' ' '/%/ {print $5}')"
+    volume {+,-}
+
 
 # Brightness
 XF86MonBrightness{Down,Up}

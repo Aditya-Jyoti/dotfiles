@@ -1,0 +1,4 @@
+#!/bin/sh
+amixer sset Master 5%"$1" && \
+dunstify -t 500 -u low -r 10001 \
+"Volume: $(amixer get Master | awk -F'[][]' '/%/ {print $2; exit}')"
