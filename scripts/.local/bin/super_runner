@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Function to handle project opener
+project_opener() {
+    # Add your project opener logic here
+    project_opener 
+}
+
+# Function to handle academic opener
+academic_opener() {
+    academic_opener 
+}
+
+# Define the options
+options="Project Opener\nAcademics Opener\nClipboard History\nCalculator"
+
+# Show Rofi menu
+chosen=$(echo -e "$options" | rofi -dmenu -i -p "Select an option:")
+
+# Handle the chosen option
+case $chosen in
+    "Project Opener")
+        project_opener
+        ;;
+    "Academic Opener")
+        academic_opener
+        ;;
+    "Clipboard History")
+        rofi -modi " :greenclip print" -show " " -run-command '{cmd}'
+        ;;
+    "Calculator")
+        rofi -show calc
+        ;;
+esac

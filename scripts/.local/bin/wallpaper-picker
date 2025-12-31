@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -e
+
+WALL_DIR="$HOME/.wallpapers"
+CACHE_DIR="$HOME/.cache/matugen/thumbs"
+SETWALL="$HOME/.local/bin/setwall"
+ROFI_THEME="$HOME/.config/rofi/wallpaper-select.rasi"
+
+mkdir -p "$CACHE_DIR"
+
+# -------------------------------------------------
+# Generate thumbnails (safe, no glob bugs)
+# -------------------------------------------------
+find "$WALL_DIR" -maxdepth 1 -type f \
+  \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) \
+  | while read -r img; do
+      thumb="$CACHE_DIR/$(basename "$img")"
+      if [ ! -f "$thumb" ]; then
+        magick "$img" -strip -thumbnail 500x500^ -gravity center -extent 500x500 "$thumb"
+      fi
+    done
+
+# -------------------------------------------------
+# Rofi image grid (script mode, icons work)
+# -------------------------------------------------
+choice=$(
+  find "$WALL_DIR" -maxdepth 1 -type f \
+    \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) \
+    | sort \
+    | while read -r img; do
+        base="$(basename "$img")"
+        printf "%s\0icon\x1f%s\n" "$base" "$CACHE_DIR/$base"
+      done \
+    | rofi \
+        -show drun \
+        -dmenu \
+        -show-icons \
+        -theme "$ROFI_THEME" \
+        -p "Wallpaper"
+)
+
+[ -z "$choice" ] && exit 0
+
+# -------------------------------------------------
+# Apply wallpaper + regenerate theme
+# -------------------------------------------------
+"$SETWALL" "$WALL_DIR/$choice"
+
+# Reload bspwm (optional)
+bspc wm -r
+

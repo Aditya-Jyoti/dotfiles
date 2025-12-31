@@ -1,0 +1,8 @@
+#!/bin/sh
+
+notes=$(exa ~/notes)
+selected=$(echo "$notes" | rofi -dmenu -i -p "󱞂 ")
+
+if [ -n "$selected" ]; then
+    alacritty -e notes new "$selected"
+fi

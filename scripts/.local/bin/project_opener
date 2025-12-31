@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Set the projects directory
+PROJECTS_DIR="$HOME/Programming/Projects"
+
+# Use find to list all directories in the projects folder
+projects=$(find "$PROJECTS_DIR" -maxdepth 1 -type d -printf "%f\n" | tail -n +2)
+
+# Use rofi to create a selection menu, allowing custom input
+selected_project=$(echo -e "$projects\n--- Create New Project ---" | rofi -dmenu -i -p " ")
+
+# Check if a project was selected or entered
+if [ -n "$selected_project" ]; then
+    if [ "$selected_project" = "--- Create New Project ---" ]; then
+        # Prompt for new project name
+        new_project=$(rofi -dmenu -p "Enter new project name:")
+        if [ -n "$new_project" ]; then
+            selected_project="$new_project"
+        else
+            exit 0
+        fi
+    fi
+
+    # Full path to the project
+    project_path="$PROJECTS_DIR/$selected_project"
+
+    # Check if the project directory exists
+    if [ ! -d "$project_path" ]; then
+        # Create the directory
+        mkdir -p "$project_path"
+        echo "Created new project directory: $project_path"
+    fi
+
+    # Open the project in VS Code
+    code "$project_path"
+
+    # Open a terminal in the project directory
+    # Note: Replace 'x-terminal-emulator' with your preferred terminal emulator
+    x-terminal-emulator -e "cd '$project_path' && exec $SHELL"
+fi

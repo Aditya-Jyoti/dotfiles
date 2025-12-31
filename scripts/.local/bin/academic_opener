@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Set the base directory
+BASE_DIR="/home/aditya/Obsidian/Academics/sem5"
+
+# Function to list directories
+list_subjects() {
+    find "$BASE_DIR" -maxdepth 1 -type d -printf "%f\n" | tail -n +2
+}
+
+# Function to list files in a subject directory and its immediate subdirectories
+list_files() {
+    echo "Go back"
+    find "$1" -maxdepth 1 -type f -name "*.pdf" -printf "%f\n"
+}
+
+# Select a subject
+selected_subject=$(list_subjects | rofi -dmenu -i -p "󰑴 ")
+
+# Check if a subject was selected
+if [ -n "$selected_subject" ]; then
+    subject_path="$BASE_DIR/$selected_subject"
+
+    # Select a file from the chosen subject
+    selected_file=$(list_files "$subject_path" | rofi -dmenu -i -p " ")
+
+    # Check if "Go back" was selected
+    if [ "$selected_file" = "Go back" ]; then
+        exec "$0" # Restart the script
+    fi
+
+    # Check if a file was selected
+    if [ -n "$selected_file" ]; then
+        file_path=$(find "$subject_path" -maxdepth 2 -type f -name "$selected_file")
+
+        # Open the selected file with Zathura and exit
+        zathura "$file_path" &
+        exit 0
+    fi
+fi

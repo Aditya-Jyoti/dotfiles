@@ -1,0 +1,12 @@
+#!/bin/bash
+
+while true; do
+    result=$(rofi -show calc -modi calc -no-show-match -no-sort)
+
+    dunstify $result
+    if [[ "$result" == "" ]]; then
+        break
+    fi
+
+    echo "$result" | awk '{print $NF}' | xclip -selection clipboard
+done
