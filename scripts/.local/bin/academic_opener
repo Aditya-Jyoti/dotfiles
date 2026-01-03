@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the base directory
-BASE_DIR="/home/aditya/Obsidian/Academics/sem5"
+BASE_DIR="/home/aditya/Obsidian/Academics/sem6"
 
 # Function to list directories
 list_subjects() {
