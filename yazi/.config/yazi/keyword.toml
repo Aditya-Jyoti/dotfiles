@@ -1,0 +1,5 @@
+[mgr]
+
+keymap = [
+    { on = "f", run = "plugin zoxide", desc = "Jump to a file/directory via fzf" }
+]
