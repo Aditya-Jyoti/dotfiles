@@ -1,44 +1,48 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# The name of the polybar bar that will display the window title
+# ---------------- CONFIG ----------------
+
 PARENT_BAR="window-title"
-PARENT_BAR_PID=$(pgrep -a "polybar" | grep "$PARENT_BAR" | cut -d" " -f1)
 
-# Format of the information displayed
-# If the window title is empty, it will display "Welcome To Reclude"
-FORMAT="{{ window_title }}"
+# ----------------------------------------
 
-# Sends $2 as a message to all polybar PIDs that are part of $1
+PARENT_BAR_PID=$(pgrep -a polybar | grep "$PARENT_BAR" | awk '{print $1}')
+
+# Get focused window title safely
+window_title="$(xdotool getwindowfocus getwindowname 2>/dev/null)"
+
+if [ -z "$window_title" ]; then
+    TITLE="Welcome To Reclude"
+else
+    TITLE="$window_title"
+fi
+
+# -------- STATUS MODE (FOR ZSCROLL) --------
+# MUST return a small, stable state string
+if [ "$1" = "--status" ]; then
+    if [ "$TITLE" = "Welcome To Reclude" ]; then
+        echo "Home"
+    else
+        echo "Window"
+    fi
+    exit 0
+fi
+
+# -------- HOOK UPDATE FUNCTION --------
+
 update_hooks() {
-    while IFS= read -r id
-    do
-        polybar-msg -p "$id" hook window-title-update $2 1>/dev/null 2>&1
-    done < <(echo "$1")
+    for id in $PARENT_BAR_PID; do
+        polybar-msg -p "$id" hook window-title-update "$1" >/dev/null 2>&1
+    done
 }
 
-# Get the title of the currently focused window
-window_title=$(xdotool getwindowfocus getwindowname)
-EXIT_CODE=$?
+# -------- NORMAL MODE --------
 
-if [ $EXIT_CODE -eq 0 ]; then
-    TITLE="$window_title"
+if [ "$TITLE" = "Welcome To Reclude" ]; then
+    update_hooks 2
 else
-    TITLE="No focused window"
+    update_hooks 1
 fi
 
-if [ -z "$TITLE" ]; then
-    TITLE="Welcome To Reclude"
-fi
-
-if [ "$1" == "--status" ]; then
-    echo "$TITLE"
-else
-    if [ "$TITLE" = "Welcome To Reclude" ]; then
-        update_hooks "$PARENT_BAR_PID" 2
-        echo "$TITLE"
-    else
-        update_hooks "$PARENT_BAR_PID" 1
-        echo "$TITLE"
-    fi
-fi
+echo "$TITLE"
 
