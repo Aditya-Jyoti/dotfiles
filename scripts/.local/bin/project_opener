@@ -32,7 +32,7 @@ if [ -n "$selected_project" ]; then
     fi
 
     # Open the project in VS Code
-    code "$project_path"
+    zeditor "$project_path"
 
     # Open a terminal in the project directory
     # Note: Replace 'x-terminal-emulator' with your preferred terminal emulator

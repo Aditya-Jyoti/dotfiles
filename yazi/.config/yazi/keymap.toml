@@ -1,0 +1,8 @@
+[mgr]
+prepend_keymap = [
+	{ on = "<C-f>", run = "plugin zoxide", desc = "Jump directories using zoxide" },
+	{ on = "<C-t>", run = "shell -- alacritty --working-directory %d", desc = "Open Alacritty in current directory" },
+	{ on = [ "g", "p" ],       run = "cd ~/Programming/Projects",     desc = "Go Projects directory" },
+	{ on = [ "g", "o" ],       run = "cd ~/Obsidian/Academics",   desc = "Go Academics directory" },
+]
+

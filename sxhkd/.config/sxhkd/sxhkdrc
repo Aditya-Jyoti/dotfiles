@@ -74,6 +74,9 @@ super + shift + s
 super + Home
     screenlocker
 
+super + Delete
+    screenlocker
+
 #################################################
 # TERMINAL
 #################################################
