@@ -1,6 +1,5 @@
 return {
   "nvim-lualine/lualine.nvim",
-  dependencies = { "nvim-tree/nvim-web-devicons", "RRethy/base16-nvim" },
 
   config = function()
     local status_ok, lualine = pcall(require, "lualine")
@@ -65,10 +64,18 @@ return {
     lualine.setup({
       options = {
         icons_enabled = true,
-        theme = "base16",
+        theme = "gruvbox",
+        globalstatus = true, 
         component_separators = "",
         section_separators = { left = "", right = "" },
         always_divide_middle = true,
+        disabled_filetypes = {
+          statusline = {
+            "neo-tree",
+            "neo-tree-popup",
+            "neo-tree-preview",
+          },
+        },
       },
       sections = {
         lualine_a = { mode, selectionCount },

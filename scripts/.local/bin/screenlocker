@@ -1,39 +1,27 @@
 #!/bin/bash
-# Sleeping cause the poermenu has to disappear before it takes the screenshot for blurring
-# sleep 1
 
-# Path to matugen colors.json
-MATUGEN_COLORS="$HOME/.cache/matugen/colors.json"
+MATUGEN_COLORS="$HOME/.cache/matugen/colors.sh"
 
-# Check if jq is installed
-if ! command -v jq &> /dev/null; then
-    echo "Error: jq is required to parse matugen colors"
-    exit 1
-fi
-
-# Check if colors.json exists
 if [ ! -f "$MATUGEN_COLORS" ]; then
     echo "Error: Matugen colors not found at $MATUGEN_COLORS"
     exit 1
 fi
 
-# Extract colors from matugen JSON (using dark mode colors)
-MODE=$(jq -r '.mode' "$MATUGEN_COLORS")
+# Source the colors
+source "$MATUGEN_COLORS"
 
-# Function to get color based on mode
-get_color() {
-    jq -r ".colors.$1.$MODE" "$MATUGEN_COLORS"
-}
+# Strip # and map semantic names
+strip() { echo "${1#\#}"; }
 
-# Map matugen colors to i3lock variables
+DEFAULT="$(strip "$color7")"       # on_surface
+FOREGROUND="$(strip "$color7")"    # on_surface
+BACKGROUND="$(strip "$color0")9F"  # surface with transparency
+WRONG="$(strip "$color1")"         # error
+VERIFYING="$(strip "$color2")"     # tertiary
+HIGHLIGHT="$(strip "$color4")"     # primary
 BLANK="00000000"
-CLEAR="#00000000"
-DEFAULT="$(get_color 'on_surface')"           # Text color
-FOREGROUND="$(get_color 'on_surface')"        # Text color
-BACKGROUND="$(get_color 'surface')9F"         # Surface with transparency
-WRONG="$(get_color 'error')"                  # Error color
-VERIFYING="$(get_color 'tertiary')"           # Tertiary for verifying
-HIGHLIGHT="$(get_color 'primary')"            # Primary for highlights
+
+echo "Colors loaded: DEFAULT=$DEFAULT WRONG=$WRONG HIGHLIGHT=$HIGHLIGHT"
 
 i3lockmore \
     --ignore-empty-password \
@@ -42,24 +30,24 @@ i3lockmore \
     --radius 200 \
     --ring-width 12 \
     \
-    --insidever-color=$BACKGROUND \
-    --ringver-color=$VERIFYING \
+    --insidever-color="$BACKGROUND" \
+    --ringver-color="$VERIFYING" \
     \
-    --insidewrong-color=$BACKGROUND \
-    --ringwrong-color=$WRONG \
+    --insidewrong-color="$BACKGROUND" \
+    --ringwrong-color="$WRONG" \
     \
-    --inside-color=$BACKGROUND \
-    --ring-color=$DEFAULT \
-    --line-color=$BLANK \
-    --separator-color=$DEFAULT \
+    --inside-color="$BACKGROUND" \
+    --ring-color="$DEFAULT" \
+    --line-color="$BLANK" \
+    --separator-color="$DEFAULT" \
     \
-    --verif-color=$FOREGROUND \
-    --wrong-color=$FOREGROUND \
-    --time-color=$FOREGROUND \
-    --date-color=$FOREGROUND \
-    --layout-color=$FOREGROUND \
-    --keyhl-color=$HIGHLIGHT \
-    --bshl-color=$WRONG \
+    --verif-color="$FOREGROUND" \
+    --wrong-color="$FOREGROUND" \
+    --time-color="$FOREGROUND" \
+    --date-color="$FOREGROUND" \
+    --layout-color="$FOREGROUND" \
+    --keyhl-color="$HIGHLIGHT" \
+    --bshl-color="$WRONG" \
     \
     --screen 1 \
     --blur 8 \

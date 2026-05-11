@@ -58,5 +58,15 @@ opt.foldmethod = "indent" -- fold based on indentation
 opt.foldnestmax = 3 -- limit fold levels
 opt.foldenable = false -- disable code folding by default
 
+opt.laststatus = 3
+
 -- floating window colours
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#1d2021" })
+
+-- cleaner empty buffers
+vim.opt.fillchars = {
+  eob = " ",
+  vert = " ",
+}
+
+vim.api.nvim_set_hl(0, "WinSeparator", { fg = "NONE", bg = "NONE" })

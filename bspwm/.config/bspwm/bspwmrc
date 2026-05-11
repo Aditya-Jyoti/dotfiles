@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+set -x
+exec > ~/.config/bspwm/bspwm.log 2>&1
+
 # kill all startup programs
 killall -q sxhkd picom polybar dunst greenclip 
 
@@ -9,7 +12,7 @@ picom -b &
 dunst &
 greenclip daemon &
 
-"$HOME/.config/polybar/launch.sh"
+"$HOME/.config/polybar/launch.sh" 
 
 ### ===============================
 ### Environment
@@ -25,20 +28,19 @@ WALL_CACHE="$HOME/.cache/matugen/current_wallpaper"
 # Colors from xrdb (matugen / pywal compatible)
 # ===============================
 
-get_xrdb() {
-  xrdb -query | awk -F: "/\\*$1/ {print \$2}" | tr -d '[:space:]'
-}
+# Wallpapers
+WALL_CACHE="$HOME/.cache/matugen/current_wallpaper"
+[ -f "$WALL_CACHE" ] && setwall "$(cat "$WALL_CACHE")"
 
-color0="$(get_xrdb color0)"
-color1="$(get_xrdb color1)"
-color4="$(get_xrdb color4)"
+# Load matugen colors
+[ -f "$HOME/.cache/matugen/colors.sh" ] && . "$HOME/.cache/matugen/colors.sh"
 
 
 ### ===============================
 ### Monitors & Desktops
 ### ===============================
 
-bspc monitor primary -d 1 2 3 4 5
+bspc monitor $(bspc query -M --names | head -n 1) -d 1 2 3 4 5
 
 ### ===============================
 ### BSPWM Configuration
@@ -52,8 +54,8 @@ bspc config gapless_monocle      false
 bspc config focus_follows_pointer true
 
 # Dynamic colors
-bspc config normal_border_color  "$color1"
-bspc config focused_border_color "$color4"
+bspc config normal_border_color  "$color0"
+bspc config focused_border_color "$color2"
 
 ### ===============================
 ### Rules

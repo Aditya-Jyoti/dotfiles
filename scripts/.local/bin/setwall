@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-
 set -e
 
 WALL="$1"
 CACHE_DIR="$HOME/.cache/matugen"
 WALL_CACHE="$CACHE_DIR/current_wallpaper"
-OUT="$CACHE_DIR/colors.json"
 
 [ -z "$WALL" ] && {
   echo "Usage: setwall <image>"
@@ -15,84 +13,29 @@ OUT="$CACHE_DIR/colors.json"
 mkdir -p "$CACHE_DIR"
 
 # ----------------------------------------
-# 0. Store current wallpaper (source of truth)
+# 1. Store wallpaper path
 # ----------------------------------------
 echo "$WALL" > "$WALL_CACHE"
 
 # ----------------------------------------
-# 1. Set wallpaper
+# 2. Set wallpaper
 # ----------------------------------------
 feh --bg-scale "$WALL"
 
 # ----------------------------------------
-# 2. Generate Material palette (JSON → file)
+# 3. Generate theme via matugen (THIS is key)
 # ----------------------------------------
-matugen image "$WALL" \
-  --mode dark \
-  --json hex > "$OUT"
+
+matugen image "$WALL" --mode dark --source-color-index 0
 
 # ----------------------------------------
-# 3. Map Material → xrdb (dark variant)
+# 4. Reload UI components (optional but recommended)
 # ----------------------------------------
-xrdb -merge <<EOF
-! Base
-*.background: $(jq -r '.colors.surface.dark' "$OUT")
-*background:  $(jq -r '.colors.surface.dark' "$OUT")
 
-*.foreground: $(jq -r '.colors.on_surface.dark' "$OUT")
-*foreground:  $(jq -r '.colors.on_surface.dark' "$OUT")
+# reload polybar
+killall -q polybar
+"$HOME/.config/polybar/launch.sh" &
 
-*.cursorColor: $(jq -r '.colors.primary.dark' "$OUT")
-*cursorColor:  $(jq -r '.colors.primary.dark' "$OUT")
-
-! Normal colors
-*.color0:  $(jq -r '.colors.surface_dim.dark' "$OUT")
-*color0:   $(jq -r '.colors.surface_dim.dark' "$OUT")
-
-*.color1:  $(jq -r '.colors.error.dark' "$OUT")
-*color1:   $(jq -r '.colors.error.dark' "$OUT")
-
-*.color2:  $(jq -r '.colors.tertiary.dark' "$OUT")
-*color2:   $(jq -r '.colors.tertiary.dark' "$OUT")
-
-*.color3:  $(jq -r '.colors.secondary.dark' "$OUT")
-*color3:   $(jq -r '.colors.secondary.dark' "$OUT")
-
-*.color4:  $(jq -r '.colors.primary.dark' "$OUT")
-*color4:   $(jq -r '.colors.primary.dark' "$OUT")
-
-*.color5:  $(jq -r '.colors.secondary_container.dark' "$OUT")
-*color5:   $(jq -r '.colors.secondary_container.dark' "$OUT")
-
-*.color6:  $(jq -r '.colors.tertiary_container.dark' "$OUT")
-*color6:   $(jq -r '.colors.tertiary_container.dark' "$OUT")
-
-*.color7:  $(jq -r '.colors.on_surface.dark' "$OUT")
-*color7:   $(jq -r '.colors.on_surface.dark' "$OUT")
-
-! Bright colors
-*.color8:  $(jq -r '.colors.surface_variant.dark' "$OUT")
-*color8:   $(jq -r '.colors.surface_variant.dark' "$OUT")
-
-*.color9:  $(jq -r '.colors.error.dark' "$OUT")
-*color9:   $(jq -r '.colors.error.dark' "$OUT")
-
-*.color10: $(jq -r '.colors.tertiary.dark' "$OUT")
-*color10:  $(jq -r '.colors.tertiary.dark' "$OUT")
-
-*.color11: $(jq -r '.colors.secondary.dark' "$OUT")
-*color11:  $(jq -r '.colors.secondary.dark' "$OUT")
-
-*.color12: $(jq -r '.colors.primary.dark' "$OUT")
-*color12:  $(jq -r '.colors.primary.dark' "$OUT")
-
-*.color13: $(jq -r '.colors.secondary_container.dark' "$OUT")
-*color13:  $(jq -r '.colors.secondary_container.dark' "$OUT")
-
-*.color14: $(jq -r '.colors.tertiary_container.dark' "$OUT")
-*color14:  $(jq -r '.colors.tertiary_container.dark' "$OUT")
-
-*.color15: $(jq -r '.colors.on_surface.dark' "$OUT")
-*color15:  $(jq -r '.colors.on_surface.dark' "$OUT")
-EOF
-
+# reload dunst (optional)
+killall -q dunst
+dunst &

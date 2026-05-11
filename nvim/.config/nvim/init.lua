@@ -1,26 +1,21 @@
 require("core.options")
 require("core.lazy")
+require("core.keymaps")
 
 --------------------------------------------------
 -- Matugen colorscheme loader
 --------------------------------------------------
 local function source_matugen()
   local matugen_path = vim.fn.expand("~/.cache/matugen/generated.lua")
-  
-  -- Check if file exists before trying to load it
+
+  -- Always load gruvbox first for syntax colors
+  vim.cmd("colorscheme gruvbox")  -- or "base16-gruvbox-dark" if you use base16
+
   if vim.fn.filereadable(matugen_path) == 1 then
-    local ok, err = pcall(dofile, matugen_path)
+    local ok, _ = pcall(dofile, matugen_path)
     if not ok then
-      -- Silently fall back without showing error
-      vim.schedule(function()
-        vim.cmd("colorscheme base16-gruvbox-dark")
-      end)
+      -- gruvbox already loaded above, nothing else needed
     end
-  else
-    -- File doesn't exist, use fallback silently
-    vim.schedule(function()
-      vim.cmd("colorscheme base16-gruvbox-dark")
-    end)
   end
 end
 
@@ -75,5 +70,17 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
       "alacritty msg --socket $ALACRITTY_SOCKET config -w $ALACRITTY_WINDOW_ID -r &",
       { detach = true }
     )
+  end,
+})
+
+-- --------------------------------------------------
+-- -- Open explorer on enter
+-- --------------------------------------------------
+
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    if vim.fn.argv()[1] == nil then
+      require("snacks").explorer.open()
+    end
   end,
 })
