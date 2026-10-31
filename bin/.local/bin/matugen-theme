@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""matugen-theme — turn a palette from ~/.config/matugen/themes.toml into a full
+matugen colour scheme (JSON on stdout) for `matugen json`.
+
+    matugen-theme <name> <dark|light>     e.g. matugen-theme gruvbox dark
+    matugen-theme --list                  theme names
+"""
+import json
+import sys
+import tomllib
+from pathlib import Path
+
+THEMES = Path.home() / ".config/matugen/themes.toml"
+TERMINAL = ["red", "green", "yellow", "blue", "magenta", "cyan"]
+
+
+def mix(a: str, b: str, t: float) -> str:
+    """Blend hex colour a towards b by t (0 = a, 1 = b)."""
+    ca = [int(a[i:i + 2], 16) for i in (1, 3, 5)]
+    cb = [int(b[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(ca, cb))
+
+
+def accent_roles(name: str, c: str, p: dict) -> dict:
+    """primary / on_primary / primary_container / … for one accent colour."""
+    return {
+        name: c,
+        f"on_{name}": p["bg"],
+        f"{name}_container": mix(c, p["bg"], 0.7),
+        f"on_{name}_container": mix(c, p["fg"], 0.4),
+    }
+
+
+def scheme(p: dict, dark: bool) -> dict:
+    bg, fg = p["bg"], p["fg"]
+    roles = {
+        "source_color": p["primary"],
+        "background": bg,
+        "on_background": fg,
+        "surface": bg,
+        "surface_dim": p["bg_alt"] if dark else p["bg1"],
+        "surface_bright": p["bg2"] if dark else p["bg_alt"],
+        "surface_container_lowest": p["bg_alt"],
+        "surface_container_low": mix(bg, p["bg1"], 0.4),
+        "surface_container": mix(bg, p["bg1"], 0.75),
+        "surface_container_high": p["bg1"],
+        "surface_container_highest": p["bg2"],
+        "surface_variant": p["bg1"],
+        "surface_tint": p["primary"],
+        "on_surface": fg,
+        "on_surface_variant": p["fg_dim"],
+        "outline": p["muted"],
+        "outline_variant": p["bg3"],
+        "inverse_surface": fg,
+        "inverse_on_surface": bg,
+        "inverse_primary": mix(p["primary"], bg, 0.4),
+        "shadow": "#000000",
+        "scrim": "#000000",
+    }
+    for name in ("primary", "secondary", "tertiary"):
+        c = p[name]
+        roles |= accent_roles(name, c, p)
+        roles |= {
+            f"{name}_fixed": c,
+            f"{name}_fixed_dim": mix(c, bg, 0.2),
+            f"on_{name}_fixed": bg,
+            f"on_{name}_fixed_variant": mix(c, bg, 0.6),
+        }
+    roles |= accent_roles("error", p["red"], p)
+    for name in TERMINAL:
+        roles |= accent_roles(name, p[name], p)
+        roles |= {f"{name}_source": p[name], f"{name}_value": p[name]}
+
+    mode = "dark" if dark else "light"
+    return {
+        "mode": mode,
+        "is_dark_mode": dark,
+        "colors": {
+            role: {"default": {"color": c}, "dark": {"color": c}, "light": {"color": c}}
+            for role, c in roles.items()
+        },
+    }
+
+
+def main() -> None:
+    themes = tomllib.loads(THEMES.read_text())
+
+    if sys.argv[1:] == ["--list"]:
+        print("\n".join(themes))
+        return
+    if len(sys.argv) != 3 or sys.argv[2] not in ("dark", "light"):
+        sys.exit(__doc__.strip())
+
+    name, mode = sys.argv[1], sys.argv[2]
+    if name not in themes:
+        sys.exit(f"unknown theme '{name}' (have: {', '.join(themes)})")
+
+    json.dump(scheme(themes[name][mode], mode == "dark"), sys.stdout, indent=1)
+
+
+if __name__ == "__main__":
+    main()

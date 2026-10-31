@@ -6,6 +6,10 @@
 #   setwall --random        random image from $WALLDIR
 #   setwall --restore       re-apply the last wallpaper (used at login)
 #   setwall --mode dark|light|toggle   switch mode, keep wallpaper
+#   setwall --theme [name|auto]        fixed theme for the current wallpaper (rofi if no name)
+#
+# A wallpaper's theme is remembered in ~/.config/matugen/wallpaper-themes and comes
+# back whenever that wallpaper is picked. Themes live in ~/.config/matugen/themes.toml.
 #
 # Env: WALLDIR (default ~/.wallpapers), MATUGEN_TYPE (default scheme-vibrant),
 #      MATUGEN_PREFER (default value; also darkness|lightness|saturation|less-saturation)
@@ -17,8 +21,23 @@ CACHE="$HOME/.cache/matugen"
 SCRIPTS="$(dirname "$(realpath "$0")")"
 mkdir -p "$CACHE"
 
+WALL_THEMES="$HOME/.config/matugen/wallpaper-themes"
 mode=$(cat "$CACHE/mode" 2>/dev/null || echo dark)
 current=$(cat "$CACHE/current_wallpaper" 2>/dev/null || true)
+
+# Fixed theme assigned to a wallpaper (empty = use wallpaper colours)
+theme_for() {
+    awk -F' *= *' -v w="$(basename "$1")" '$1 == w { print $2 }' "$WALL_THEMES" 2>/dev/null
+}
+
+# Assign (or with "auto", clear) the theme for a wallpaper
+set_theme_for() {
+    local wall theme=$2
+    wall=$(basename "$1")
+    touch "$WALL_THEMES"
+    sed -i "/^$(printf '%s' "$wall" | sed 's/[][\\.*^$/]/\\&/g') *=/d" "$WALL_THEMES"
+    [ "$theme" = auto ] || echo "$wall = $theme" >> "$WALL_THEMES"
+}
 
 list_walls() {
     find -L "$WALLDIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) "$@"
@@ -44,8 +63,20 @@ case "${1:-}" in
         echo "$mode" > "$CACHE/mode"
         img="$current"
         ;;
+    --theme)
+        theme=${2:-}
+        if [ -z "$theme" ]; then
+            choice=$({ echo "auto  (wallpaper colours)"; matugen-theme --list; } |
+                rofi -dmenu -i -p "󰏘 theme") || exit 0
+            theme=${choice%% *}
+        fi
+        [ "$theme" = auto ] || matugen-theme --list | grep -qx "$theme" ||
+            { echo "setwall: unknown theme '$theme'" >&2; exit 1; }
+        set_theme_for "$current" "$theme"
+        img="$current"
+        ;;
     -h | --help)
-        sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
         exit 0
         ;;
     *)
@@ -62,10 +93,18 @@ if [ "${1:-}" = --restore ] && [ -f "$CACHE/colors.sh" ]; then
     exit 0
 fi
 
-# "value" follows the image's dominant hue; "saturation" chases small vivid accents
-matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-vibrant}" --prefer "${MATUGEN_PREFER:-value}" -q
+theme=$(theme_for "$img")
+if [ -n "$theme" ]; then
+    matugen-theme "$theme" "$mode" > "$CACHE/theme.json"
+    matugen json "$CACHE/theme.json" -m "$mode" -q
+    label="$theme $mode"
+else
+    # "value" follows the image's dominant hue; "saturation" chases small vivid accents
+    matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-vibrant}" --prefer "${MATUGEN_PREFER:-value}" -q
+    label="wallpaper · $mode"
+fi
 echo "$img" > "$CACHE/current_wallpaper"
 
 "$SCRIPTS/theme-reload"
 ("$SCRIPTS/screenlock" --render >/dev/null 2>&1 &)   # pre-render lock background
-notify-send -a setwall -i "$img" "Theme updated" "$(basename "$img") · $mode" 2>/dev/null || true
+notify-send -a setwall -i "$img" "Theme updated" "$(basename "$img") · $label" 2>/dev/null || true

@@ -27,6 +27,10 @@ super + w
 super + shift + w
     setwall --mode toggle
 
+# Fixed theme for this wallpaper (gruvbox, nord, …) or back to wallpaper colours
+super + alt + w
+    setwall --theme
+
 
 #################################################
 # SCRATCHPADS / APPLICATIONS

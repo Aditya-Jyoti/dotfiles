@@ -18,9 +18,15 @@ Each top-level directory is a [stow](https://www.gnu.org/software/stow/) package
 |---|---|
 | Pick wallpaper + recolour everything | `super + w` (or `setwall <image>` / `setwall --random`) |
 | Light ↔ dark | `super + shift + w` (or `setwall --mode toggle`) |
+| Fixed theme for this wallpaper | `super + alt + w` (or `setwall --theme gruvbox`; `--theme auto` to undo) |
 | Re-apply colours to running apps | `theme-reload` |
 | Different palette style | `MATUGEN_TYPE=scheme-tonal-spot setwall` |
 | Different source colour | `MATUGEN_PREFER=saturation setwall` |
+
+Fixed themes (gruvbox, nord, ayu, everforest, catppuccin — each dark + light) are palettes in
+`matugen/.config/matugen/themes.toml`; `matugen-theme` expands them into a full scheme so every
+template works. Which wallpaper uses which theme is remembered in `matugen/.config/matugen/wallpaper-themes`.
+Add a theme by adding a `[name.dark]` + `[name.light]` block.
 
 Scripts live in `bin/.local/bin/` (on `$PATH`). Templates in `matugen/.config/matugen/templates/` → outputs mostly in `~/.cache/matugen/` (not tracked).
 
@@ -36,7 +42,7 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `polybar` | `launch.sh` picks `bar/laptop` (compact) or `bar/monitor` (roomy) per output |
 | `picom` | glx, v13 animations, blur only behind translucent windows |
 | `matugen` | colour config + templates |
-| `bin` | scripts → `~/.local/bin`: `setwall`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator` |
+| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator` |
 | `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 
 ## Not tracked
