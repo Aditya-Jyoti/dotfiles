@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+# theme-reload — push freshly generated matugen colours into running programs.
+# Safe to run any time; skips whatever isn't running.
+
+C="$HOME/.cache/matugen"
+[ -f "$C/colors.sh" ] || exit 1
+. "$C/colors.sh"
+
+xrdb -merge "$C/colors.Xresources"
+
+# bspwm borders
+if pgrep -x bspwm >/dev/null; then
+    bspc config normal_border_color   "$outline_variant"
+    bspc config active_border_color   "$outline"
+    bspc config focused_border_color  "$primary"
+    bspc config presel_feedback_color "$primary_container"
+fi
+
+# polybar re-reads its include-file on restart
+pgrep -x polybar >/dev/null && polybar-msg cmd restart >/dev/null 2>&1
+
+pgrep -x dunst >/dev/null && dunstctl reload
+
+# tmux (all sessions share the server)
+tmux source-file "$C/tmux.conf" >/dev/null 2>&1
+
+# GTK apps pick up gtk.css on restart; nudge the theme for new windows
+gsettings set org.gnome.desktop.interface color-scheme "prefer-$wallpaper_mode" 2>/dev/null
+
+# alacritty live-reloads its imported colour file on its own
+exit 0

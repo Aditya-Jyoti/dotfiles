@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# setwall — set wallpaper + regenerate matugen colours everywhere
+#
+#   setwall                 pick from $WALLDIR with rofi
+#   setwall <image>         use a specific image
+#   setwall --random        random image from $WALLDIR
+#   setwall --restore       re-apply the last wallpaper (used at login)
+#   setwall --mode dark|light|toggle   switch mode, keep wallpaper
+#
+# Env: WALLDIR (default ~/.wallpapers), MATUGEN_TYPE (default scheme-tonal-spot)
+
+set -euo pipefail
+
+WALLDIR="${WALLDIR:-$HOME/.wallpapers}"
+CACHE="$HOME/.cache/matugen"
+SCRIPTS="$(dirname "$(realpath "$0")")"
+mkdir -p "$CACHE"
+
+mode=$(cat "$CACHE/mode" 2>/dev/null || echo dark)
+current=$(cat "$CACHE/current_wallpaper" 2>/dev/null || true)
+
+list_walls() {
+    find -L "$WALLDIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) "$@"
+}
+
+case "${1:-}" in
+    "")
+        name=$(list_walls -printf '%P\n' | sort | rofi -dmenu -i -p "󰸉 ") || exit 0
+        img="$WALLDIR/$name"
+        ;;
+    --random)
+        img=$(list_walls | grep -vxF "$current" | shuf -n1)
+        ;;
+    --restore)
+        img="$current"
+        ;;
+    --mode)
+        case "${2:-toggle}" in
+            toggle) [ "$mode" = dark ] && mode=light || mode=dark ;;
+            dark | light) mode="$2" ;;
+            *) echo "usage: setwall --mode dark|light|toggle" >&2; exit 1 ;;
+        esac
+        echo "$mode" > "$CACHE/mode"
+        img="$current"
+        ;;
+    -h | --help)
+        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    *)
+        img=$(realpath "$1")
+        ;;
+esac
+
+[ -n "${img:-}" ] && [ -f "$img" ] || { echo "setwall: no wallpaper found (${img:-none})" >&2; exit 1; }
+
+feh --no-fehbg --bg-fill "$img"
+
+# --restore only needs the wallpaper; colours are already cached
+if [ "${1:-}" = --restore ] && [ -f "$CACHE/colors.sh" ]; then
+    exit 0
+fi
+
+matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-tonal-spot}" --prefer saturation -q
+echo "$img" > "$CACHE/current_wallpaper"
+
+"$SCRIPTS/theme-reload"
+notify-send -a setwall -i "$img" "Theme updated" "$(basename "$img") · $mode" 2>/dev/null || true
