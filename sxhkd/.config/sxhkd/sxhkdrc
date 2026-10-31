@@ -175,3 +175,8 @@ XF86AudioMute
 # Brightness
 XF86MonBrightness{Down,Up}
     brightness-control {down,up}
+
+# Keyboard knob: plain = volume (above), super + knob = brightness
+# (the AULA F75 doesn't send Fn to the computer, so fn + knob can't be told apart)
+super + XF86Audio{Lower,Raise}Volume
+    brightness-control {down,up}
