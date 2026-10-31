@@ -18,7 +18,7 @@ Each top-level directory is a [stow](https://www.gnu.org/software/stow/) package
 |---|---|
 | Pick wallpaper + recolour everything | `super + w` (or `setwall <image>` / `setwall --random`) |
 | Light ↔ dark | `super + shift + w` (or `setwall --mode toggle`) |
-| Re-apply colours to running apps | `~/.config/matugen/scripts/theme-reload` |
+| Re-apply colours to running apps | `theme-reload` |
 | Different palette style | `MATUGEN_TYPE=scheme-tonal-spot setwall` |
 | Different source colour | `MATUGEN_PREFER=saturation setwall` |
 
