@@ -1,30 +1,22 @@
 #!/usr/bin/env bash
-# screenlock — i3lock-color, themed from matugen.
-# Ring + clock are centred on every monitor (no hardcoded screen/positions).
+# screenlock — minimal i3lock-color lock screen themed by matugen.
 #
-# The background is blurred by ffmpeg (shrink -> blur -> scale back up), which takes
-# ~0.4s for both monitors; i3lock's own --blur is CPU-bound and gets slow when strong.
+# Background: the current wallpaper, blurred and tinted, fitted to every monitor.
+# It is pre-rendered once per (wallpaper, monitor layout, colours) and cached, so
+# locking is instant. Clock + date are centred on each monitor; a thin ring only
+# appears while typing.
+#
+#   screenlock            lock
+#   screenlock --render   just (re)build the cached background (setwall calls this)
 #
 # Env: LOCK_BLUR (default 3) — blur strength; 2 = light, 5 = very heavy
+#      LOCK_DIM  (default 0.45) — how strongly the surface colour tints the wallpaper
 
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/screenlock"
 COLORS="$HOME/.cache/matugen/colors.sh"
+WALLPAPER=$(cat "$HOME/.cache/matugen/current_wallpaper" 2>/dev/null)
 
-pgrep -x i3lock >/dev/null && exit 0   # already locked
-
-# Blurred screenshot as raw RGB in a private tmpfs file, removed after unlock
-umask 077
-size=$(xrandr | awk '/current/ { gsub(",", "", $10); print $8 "x" $10; exit }')
-image="${XDG_RUNTIME_DIR:-/tmp}/screenlock.raw"
-trap 'rm -f "$image"' EXIT
-
-background=(--blur 8)   # fallback if the screenshot fails
-if ffmpeg -loglevel error -y -f x11grab -video_size "$size" -i "$DISPLAY" -frames:v 1 \
-        -vf "scale=iw/10:-1:flags=bilinear,gblur=sigma=${LOCK_BLUR:-3},scale=${size%x*}:${size#*x}:flags=bicubic" \
-        -f rawvideo -pix_fmt rgb24 "$image"; then
-    background=(--image "$image" --raw "$size:rgb")
-fi
-
-# Never refuse to lock just because colours are missing — fall back to defaults
+# Never refuse to lock because colours are missing — fall back to defaults
 # shellcheck source=/dev/null
 [[ -f $COLORS ]] && source "$COLORS"
 
@@ -33,45 +25,104 @@ hex() { local v=${1#\#}; printf '%s%s' "$v" "${2:-}"; }
 
 text=$(hex "${on_surface:-#e8e0e8}")
 subtext=$(hex "${on_surface_variant:-#cec3d1}")
-inside=$(hex "${surface:-#161217}" cc)       # ~80% opaque
-ring=$(hex "${outline:-#968e98}")
+hint=$(hex "${outline:-#968e98}")
 accent=$(hex "${primary:-#deb8f7}")
 verify=$(hex "${tertiary:-#f4b7ba}")
 wrong=$(hex "${error:-#ffb4ab}")
+tint=$(hex "${surface:-#161217}")
 clear=00000000
 
-FONT="FiraCode Nerd Font"
+# ---------- background ----------
 
-# --nofork so the image can be removed once unlocked
-i3lock --nofork \
-    "${background[@]}" \
+# Monitors as "WxH+X+Y", plus the size of the whole X screen
+monitors() { xrandr --listmonitors | awk 'NR > 1 { split($3, g, /[x+\/]/); print g[1] "x" g[3] "+" g[5] "+" g[6] }'; }
+screen_size() { xrandr | awk '/current/ { gsub(",", "", $10); print $8 "x" $10; exit }'; }
+
+background_path() {
+    local key
+    key=$(printf '%s\n' "$WALLPAPER" "$(stat -c %Y "$WALLPAPER" 2>/dev/null)" \
+        "$(monitors)" "$tint" "${LOCK_BLUR:-3}" "${LOCK_DIM:-0.45}" | md5sum | cut -c1-12)
+    echo "$CACHE/$key.png"
+}
+
+render_background() {
+    local out=$1 size n=0 graph="" chain="[canvas]" w h x y geo
+    size=$(screen_size)
+    mapfile -t mons < <(monitors)
+    [[ -f $WALLPAPER && ${#mons[@]} -gt 0 ]] || return 1
+
+    # One branch per monitor: fill -> shrink -> blur -> grow -> tint, then overlay in place
+    graph="[0:v]split=${#mons[@]}$(printf '[s%d]' $(seq 0 $(( ${#mons[@]} - 1 ))));"
+    for geo in "${mons[@]}"; do
+        IFS='x+' read -r w h x y <<<"$geo"
+        graph+="[s$n]scale=$((w / 8)):$((h / 8)):force_original_aspect_ratio=increase,crop=$((w / 8)):$((h / 8)),"
+        graph+="gblur=sigma=${LOCK_BLUR:-3},scale=$w:$h:flags=bicubic,"
+        graph+="drawbox=c=0x$tint@${LOCK_DIM:-0.45}:t=fill[m$n];"
+        n=$(( n + 1 ))
+    done
+    graph+="color=c=0x$tint:s=$size[canvas];"
+    n=0
+    for geo in "${mons[@]}"; do
+        IFS='x+' read -r w h x y <<<"$geo"
+        graph+="${chain}[m$n]overlay=$x:$y"
+        n=$(( n + 1 ))
+        if (( n < ${#mons[@]} )); then chain="[c$n]"; graph+="$chain;"; fi
+    done
+
+    mkdir -p "$CACHE"
+    ffmpeg -loglevel error -y -i "$WALLPAPER" -filter_complex "$graph" -frames:v 1 "$out.tmp.png" &&
+        mv "$out.tmp.png" "$out"
+}
+
+background=$(background_path)
+if [[ ! -f $background ]]; then
+    rm -f "$CACHE"/*.png 2>/dev/null   # old wallpapers/layouts
+    render_background "$background" || background=""
+fi
+
+[[ ${1:-} == --render ]] && exit 0
+
+pgrep -x i3lock >/dev/null && exit 0   # already locked
+
+if [[ -n $background ]]; then
+    bg_args=(--image "$background")
+else
+    bg_args=(--color "$tint")
+fi
+
+# ---------- lock ----------
+# Positions are per monitor: x/y/w/h = that monitor, ix/iy = ring, tx/ty = time
+
+FONT="Adwaita Sans"
+
+exec i3lock --nofork \
+    "${bg_args[@]}" \
     --ignore-empty-password \
-    --indicator \
     --clock \
-    \
-    --radius 200 \
-    --ring-width 12 \
-    \
-    --inside-color="$inside"      --ring-color="$ring" \
-    --insidever-color="$inside"   --ringver-color="$verify" \
-    --insidewrong-color="$inside" --ringwrong-color="$wrong" \
-    --line-color="$clear"         --separator-color="$clear" \
-    --keyhl-color="$accent"       --bshl-color="$wrong" \
-    \
-    --time-color="$text"   --date-color="$subtext" \
-    --verif-color="$text"  --wrong-color="$text" \
-    --layout-color="$text" --modif-color="$subtext" \
+    --force-clock \
     \
     --time-str="%H:%M" \
-    --date-str="%A, %d %B" \
-    --time-font="$FONT" --date-font="$FONT" \
-    --verif-font="$FONT" --wrong-font="$FONT" \
-    --time-size=72 \
-    --date-size=20 \
+    --time-font="$FONT" --time-size=140 --time-color="$text" \
+    --time-pos="x+w/2:y+h/2-20" \
     \
-    --verif-text="Verifying…" \
-    --wrong-text="Incorrect" \
-    --noinput-text="Empty" \
+    --date-str="%A, %d %B" \
+    --date-font="$FONT" --date-size=26 --date-color="$subtext" \
+    --date-pos="tx:ty+58" \
+    \
+    --greeter-text="󰌾  type to unlock" \
+    --greeter-font="FiraCode Nerd Font" --greeter-size=15 --greeter-color="$hint" \
+    --greeter-pos="x+w/2:y+h-70" \
+    \
+    --ind-pos="x+w/2:y+h/2+150" \
+    --radius 22 --ring-width 4 \
+    --inside-color="$clear"      --ring-color="$clear" \
+    --insidever-color="$clear"   --ringver-color="$verify" \
+    --insidewrong-color="$clear" --ringwrong-color="$wrong" \
+    --line-color="$clear"        --separator-color="$clear" \
+    --keyhl-color="$accent"      --bshl-color="$wrong" \
+    \
+    --verif-text="" --wrong-text="" --noinput-text="" --lock-text="" --lockfailed-text="" \
+    --modif-color="$subtext" --layout-color="$clear" \
     \
     --pass-media-keys \
     --pass-volume-keys \

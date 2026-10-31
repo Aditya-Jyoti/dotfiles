@@ -56,6 +56,7 @@ bspc config merge_overlapping_monitors true
 xsetroot -cursor_name left_ptr
 setwall --restore || feh --no-fehbg --bg-fill ~/.wallpapers/pixelart-mountainrange.png
 theme-reload   # xrdb + border colours
+screenlock --render &   # cache lock background for this monitor layout
 
 ### ===============================
 ### Daemons

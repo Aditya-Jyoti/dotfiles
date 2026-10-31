@@ -67,4 +67,5 @@ matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-vibrant}" --prefer "$
 echo "$img" > "$CACHE/current_wallpaper"
 
 "$SCRIPTS/theme-reload"
+("$SCRIPTS/screenlock" --render >/dev/null 2>&1 &)   # pre-render lock background
 notify-send -a setwall -i "$img" "Theme updated" "$(basename "$img") · $mode" 2>/dev/null || true
