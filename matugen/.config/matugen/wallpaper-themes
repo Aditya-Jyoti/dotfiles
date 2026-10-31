@@ -2,3 +2,4 @@
 # <wallpaper file name> = <theme from themes.toml>
 # Wallpapers not listed here get colours generated from the image.
 pixelart-mountainrange.png = catppuccin
+gruvbox-beserk.jpg = gruvbox

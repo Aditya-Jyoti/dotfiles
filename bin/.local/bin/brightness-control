@@ -1,17 +1,68 @@
 #!/usr/bin/env bash
-# brightness-control up|down — step the backlight and show a dunst progress bar.
+# brightness-control up|down — step brightness of the *focused* monitor.
+#   laptop panel (eDP)  -> brightnessctl
+#   external monitor    -> ddcutil (DDC/CI, VCP 0x10), bus looked up once and cached
 set -euo pipefail
 
 STEP=10
 NOTIFY_ID=10002
+BUS_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/ddc-buses"
 
 case "${1:-}" in
-    up)   brightnessctl -q set "${STEP}%+" ;;
-    down) brightnessctl -q --min-value=1 set "${STEP}%-" ;;   # never fully black
+    up)   sign=+ ;;
+    down) sign=- ;;
     *)    echo "usage: $(basename "$0") up|down" >&2; exit 1 ;;
 esac
 
-percent=$(( $(brightnessctl get) * 100 / $(brightnessctl max) ))
+notify() {
+    dunstify -a brightness -u low -t 800 -r "$NOTIFY_ID" \
+        -h "int:value:$2" "󰃠  Brightness · $1" "$2%"
+}
 
-dunstify -a brightness -u low -t 800 -r "$NOTIFY_ID" \
-    -h "int:value:$percent" "󰃠  Brightness" "${percent}%"
+# i2c bus for a connector (e.g. DP-2), from `ddcutil detect`, cached per connector
+ddc_bus() {
+    local output=$1 bus
+    bus=$(awk -v o="$output" '$1 == o { print $2 }' "$BUS_CACHE" 2>/dev/null)
+    if [[ -z $bus ]]; then
+        bus=$(ddcutil detect --terse 2>/dev/null | awk -v o="$output" '
+            /I2C bus:/      { split($NF, a, "-"); b = a[2] }
+            /DRM connector/ { if ($NF ~ "-" o "$") { print b; exit } }')
+        [[ -n $bus ]] || return 1
+        mkdir -p "$(dirname "$BUS_CACHE")"
+        echo "$output $bus" >> "$BUS_CACHE"
+    fi
+    echo "$bus"
+}
+
+output=$(bspc query -M -m focused --names)
+
+if [[ $output == eDP* ]]; then
+    if [[ $sign == + ]]; then
+        brightnessctl -q set "${STEP}%+"
+    else
+        brightnessctl -q --min-value=1 set "${STEP}%-"   # never fully black
+    fi
+    notify "$output" $(( $(brightnessctl get) * 100 / $(brightnessctl max) ))
+    exit 0
+fi
+
+if ! command -v ddcutil >/dev/null; then
+    dunstify -a brightness -u normal -r "$NOTIFY_ID" "󰃠  Brightness · $output" "Install ddcutil to control external monitors"
+    exit 1
+fi
+
+# DDC is slow; drop knob ticks that arrive while a change is still in flight
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/brightness-ddc.lock"
+flock -n 9 || exit 0
+
+bus=$(ddc_bus "$output") || { echo "no DDC bus found for $output" >&2; exit 1; }
+ddc=(ddcutil --bus "$bus" --sleep-multiplier 0.2 --noverify)
+
+# getvcp --brief: "VCP 10 C <current> <max>"
+read -r _ _ _ current max < <("${ddc[@]}" getvcp 10 --brief)
+new=$(( current $sign STEP ))
+(( new < 0 )) && new=0
+(( new > max )) && new=$max
+
+"${ddc[@]}" setvcp 10 "$new"
+notify "$output" $(( new * 100 / max ))
