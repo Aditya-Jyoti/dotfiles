@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# displays — pick a monitor layout from rofi (extend / mirror / one screen).
+#
+#   displays              rofi menu, then apply + refresh bars/wallpaper
+#   displays apply [mode] just xrandr + bspwm desktops (bspwmrc uses this);
+#                         no mode = last one picked, or extend-right
+#
+# Modes: extend-right extend-left extend-above mirror external laptop
+# The choice is remembered in ~/.cache/display-mode and reused on login/replug.
+# Desktops: external 1-5 + laptop 6-8 when extended, 1-8 on the one screen otherwise.
+
+STATE="${XDG_CACHE_HOME:-$HOME/.cache}/display-mode"
+
+XR=$(xrandr --query)
+INT=$(awk '/^eDP[^ ]* connected/ { print $1; exit }' <<<"$XR")
+EXT=$(awk '/ connected/ && $1 !~ /^eDP/ { print $1; exit }' <<<"$XR")
+
+# Native mode + highest refresh rate of an output: "2560x1440 59.95"
+best_mode() {
+    awk -v o="$1" '
+        $1 == o          { f = 1; next }
+        f && /^[A-Za-z]/ { f = 0 }
+        f && !mode       { mode = $1 }
+        f && $1 == mode  {
+            for (i = 2; i <= NF; i++) { r = $i; gsub(/[*+]/, "", r); if (r + 0 > m) m = r + 0 }
+        }
+        END { print mode, m }' <<<"$XR"
+}
+
+# Put desktops <names...> on bspwm monitor $1 in that order, creating any that
+# don't exist yet. Leftover desktops (bspwm's default "Desktop") are removed later.
+assign() {
+    local mon=$1 d; shift
+    for d; do
+        if bspc query -D -d "$d" >/dev/null 2>&1; then
+            bspc desktop "$d" --to-monitor "$mon" 2>/dev/null
+        else
+            bspc monitor "$mon" --add-desktops "$d"
+        fi
+    done
+    bspc monitor "$mon" --reorder-desktops "$@"
+}
+
+# Remove any desktop not named 1-8, moving its windows to desktop 1 first
+remove_strays() {
+    local id
+    for id in $(bspc query -D); do
+        [[ $(bspc query -D -d "$id" --names) == [1-8] ]] && continue
+        bspc query -N -d "$id" -n .window 2>/dev/null | while read -r w; do bspc node "$w" -d 1; done
+        bspc desktop "$id" --remove
+    done
+}
+
+# bspwm handles the RandR change asynchronously; wait until it sees $1 monitors
+wait_for_monitors() {
+    for _ in $(seq 20); do
+        [[ $(bspc query -M | wc -l) -eq $1 ]] && return
+        sleep 0.1
+    done
+}
+
+apply() {
+    local mode=$1 off ext_mode ext_rate mon
+    [[ -n $EXT ]] || mode=laptop
+
+    off=$(awk '/ disconnected/ { printf "--output %s --off ", $1 }' <<<"$XR")
+    [[ -n $EXT ]] && read -r ext_mode ext_rate < <(best_mode "$EXT")
+    # --scale 1x1 undoes the scaling a previous mirror left behind
+    local int=(--output "$INT" --auto --scale 1x1)
+    local ext=(--output "$EXT" --mode "$ext_mode" ${ext_rate:+--rate "$ext_rate"} --scale 1x1)
+
+    # shellcheck disable=SC2086
+    case $mode in
+        extend-right) xrandr $off "${int[@]}" "${ext[@]}" --primary --right-of "$INT" ;;
+        extend-left)  xrandr $off "${int[@]}" "${ext[@]}" --primary --left-of  "$INT" ;;
+        extend-above) xrandr $off "${int[@]}" "${ext[@]}" --primary --above    "$INT" ;;
+        # Laptop shows the monitor's picture, scaled to fit (16:10 panel → slight stretch)
+        mirror)       xrandr $off "${ext[@]}" --primary --pos 0x0 \
+                             --output "$INT" --auto --same-as "$EXT" --scale-from "$ext_mode" ;;
+        external)     xrandr $off --output "$INT" --off "${ext[@]}" --primary --pos 0x0 ;;
+        laptop)       xrandr $off ${EXT:+--output "$EXT" --off} "${int[@]}" --primary --pos 0x0 ;;
+        *) echo "displays: unknown mode '$mode'" >&2; return 1 ;;
+    esac || return 1
+
+    if [[ $mode == extend-* ]]; then
+        wait_for_monitors 2
+        assign "$EXT" 1 2 3 4 5
+        assign "$INT" 6 7 8
+    else
+        # One picture: mirrored outputs are merged by bspwm (merge_overlapping_monitors)
+        wait_for_monitors 1
+        mon=$(bspc query -M --names | head -n1)
+        assign "$mon" 1 2 3 4 5 6 7 8
+    fi
+    remove_strays
+}
+
+# Wallpaper, bars and the cached lock background all depend on the layout
+refresh() {
+    setwall --restore
+    "$HOME/.config/polybar/launch.sh"
+    screenlock --render &
+}
+
+menu() {
+    local current choice mode
+    current=$(cat "$STATE" 2>/dev/null)
+
+    if [[ -z $EXT ]]; then
+        apply laptop && refresh
+        dunstify -a displays -u low "󰌢  Laptop only" "No external monitor connected"
+        exit 0
+    fi
+
+    # "<mode>\t<label>" — the mode column is hidden from rofi
+    local options=(
+        $'extend-right\t󰍺  Extend · monitor on the right'
+        $'extend-left\t󰍺  Extend · monitor on the left'
+        $'extend-above\t󰍺  Extend · monitor above'
+        $'mirror\t󰆏  Mirror · same picture on both'
+        $'external\t󰍹  Monitor only'
+        $'laptop\t󰌢  Laptop only'
+    )
+    local i selected=0
+    for i in "${!options[@]}"; do
+        [[ ${options[i]%%$'\t'*} == "${current:-extend-right}" ]] && selected=$i
+    done
+
+    choice=$(printf '%s\n' "${options[@]}" | cut -f2 |
+        rofi -dmenu -i -p "󰍹 " -format i -selected-row "$selected" \
+             -theme-str 'window { width: 460px; height: 0; }' \
+             -theme-str 'listview { lines: 6; fixed-height: false; }') || exit 0
+    [[ -n $choice ]] || exit 0
+
+    mode=${options[choice]%%$'\t'*}
+    if apply "$mode"; then
+        echo "$mode" >"$STATE"
+        refresh
+        dunstify -a displays -u low "${options[choice]#*$'\t'}"
+    else
+        dunstify -a displays -u critical "Display change failed" "xrandr rejected '$mode'"
+    fi
+}
+
+case $1 in
+    apply) apply "${2:-$(cat "$STATE" 2>/dev/null || echo extend-right)}" ;;
+    "")    menu ;;
+    *)     echo "usage: displays [apply [mode]]" >&2; exit 2 ;;
+esac

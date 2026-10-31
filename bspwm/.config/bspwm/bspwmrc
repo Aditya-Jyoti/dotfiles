@@ -13,41 +13,13 @@ killall -q picom sxhkd polybar dunst flameshot greenclip blueman-applet xautoloc
 ### Monitors (run before wallpaper/bars)
 ### ===============================
 
-XR=$(xrandr --query)
-INT=$(echo "$XR" | awk '/^eDP[^ ]* connected/ {print $1; exit}')
-EXT=$(echo "$XR" | awk '/ connected/ && $1 !~ /^eDP/ {print $1; exit}')
-
-# Turn off anything unplugged so stale outputs don't hold desktops
-OFF=$(echo "$XR" | awk '/ disconnected/ {printf "--output %s --off ", $1}')
-
-if [ -n "$EXT" ]; then
-    # External: its preferred resolution at the highest refresh rate it offers
-    set -- $(echo "$XR" | awk -v o="$EXT" '
-        $1 == o          { f = 1; next }
-        f && /^[A-Za-z]/ { f = 0 }
-        f && !mode       { mode = $1 }
-        f && $1 == mode  {
-            for (i = 2; i <= NF; i++) { r = $i; gsub(/[*+]/, "", r); if (r + 0 > m) m = r + 0 }
-        }
-        END { print mode, m }')
-    MODE=$1 RATE=$2
-
-    # shellcheck disable=SC2086
-    xrandr $OFF --output "$INT" --auto \
-           --output "$EXT" --mode "$MODE" ${RATE:+--rate "$RATE"} --right-of "$INT" --primary \
-        || xrandr --output "$INT" --auto --output "$EXT" --auto --right-of "$INT" --primary
-
-    bspc monitor "$EXT" -d 1 2 3 4 5
-    bspc monitor "$INT" -d 6 7 8
-else
-    # shellcheck disable=SC2086
-    xrandr $OFF --output "$INT" --auto --primary
-    bspc monitor "$INT" -d 1 2 3 4 5 6 7 8
-fi
-
 bspc config remove_disabled_monitors   true
 bspc config remove_unplugged_monitors  true
 bspc config merge_overlapping_monitors true
+
+# Layout last picked in the display menu (super + shift + d); extend-right by default.
+# External gets desktops 1-5 and the laptop 6-8, or 1-8 on a single screen.
+displays apply
 
 ### ===============================
 ### Theme & wallpaper

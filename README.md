@@ -37,12 +37,12 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 
 | Package | Notes |
 |---|---|
-| `bspwm` | monitor setup (laptop eDP + any external), autostart, rules |
+| `bspwm` | autostart, rules; monitor layout comes from `displays` (super + shift + d: extend / mirror / one screen, remembered) |
 | `sxhkd` | keybinds |
 | `polybar` | `launch.sh` picks `bar/laptop` (compact) or `bar/monitor` (roomy) per output |
 | `picom` | glx, v13 animations, blur only behind translucent windows |
 | `matugen` | colour config + templates |
-| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard` |
+| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays` |
 | `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 
 ## Not tracked
