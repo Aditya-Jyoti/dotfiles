@@ -2,11 +2,27 @@
 # screenlock — i3lock-color, themed from matugen.
 # Ring + clock are centred on every monitor (no hardcoded screen/positions).
 #
-# Env: LOCK_BLUR (default 18) — blur strength of the screenshot behind the lock
+# The background is blurred by ffmpeg (shrink -> blur -> scale back up), which takes
+# ~0.4s for both monitors; i3lock's own --blur is CPU-bound and gets slow when strong.
+#
+# Env: LOCK_BLUR (default 3) — blur strength; 2 = light, 5 = very heavy
 
 COLORS="$HOME/.cache/matugen/colors.sh"
 
 pgrep -x i3lock >/dev/null && exit 0   # already locked
+
+# Blurred screenshot as raw RGB in a private tmpfs file, removed after unlock
+umask 077
+size=$(xrandr | awk '/current/ { gsub(",", "", $10); print $8 "x" $10; exit }')
+image="${XDG_RUNTIME_DIR:-/tmp}/screenlock.raw"
+trap 'rm -f "$image"' EXIT
+
+background=(--blur 8)   # fallback if the screenshot fails
+if ffmpeg -loglevel error -y -f x11grab -video_size "$size" -i "$DISPLAY" -frames:v 1 \
+        -vf "scale=iw/10:-1:flags=bilinear,gblur=sigma=${LOCK_BLUR:-3},scale=${size%x*}:${size#*x}:flags=bicubic" \
+        -f rawvideo -pix_fmt rgb24 "$image"; then
+    background=(--image "$image" --raw "$size:rgb")
+fi
 
 # Never refuse to lock just because colours are missing — fall back to defaults
 # shellcheck source=/dev/null
@@ -26,9 +42,10 @@ clear=00000000
 
 FONT="FiraCode Nerd Font"
 
-i3lock \
+# --nofork so the image can be removed once unlocked
+i3lock --nofork \
+    "${background[@]}" \
     --ignore-empty-password \
-    --blur "${LOCK_BLUR:-18}" \
     --indicator \
     --clock \
     \
