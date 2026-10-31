@@ -34,6 +34,8 @@ background = '{{colors.secondary_container.default.hex}}'
 text = '{{colors.on_primary_container.default.hex}}'
 background = '{{colors.primary_container.default.hex}}'
 
+# ANSI colours: on light themes black/white swap and brights darken instead of lighten
+<* if {{ is_dark_mode }} *>
 [colors.normal]
 black   = '{{colors.surface_container_high.default.hex}}'
 red     = '{{colors.red.default.hex}}'
@@ -63,3 +65,34 @@ blue    = '{{colors.blue.default.hex | lighten: -12.0}}'
 magenta = '{{colors.magenta.default.hex | lighten: -12.0}}'
 cyan    = '{{colors.cyan.default.hex | lighten: -12.0}}'
 white   = '{{colors.outline.default.hex}}'
+<* else *>
+[colors.normal]
+black   = '{{colors.on_surface_variant.default.hex}}'
+red     = '{{colors.red.default.hex}}'
+green   = '{{colors.green.default.hex}}'
+yellow  = '{{colors.yellow.default.hex}}'
+blue    = '{{colors.blue.default.hex}}'
+magenta = '{{colors.magenta.default.hex}}'
+cyan    = '{{colors.cyan.default.hex}}'
+white   = '{{colors.surface_container_high.default.hex}}'
+
+[colors.bright]
+black   = '{{colors.outline.default.hex}}'
+red     = '{{colors.red.default.hex | lighten: -8.0}}'
+green   = '{{colors.green.default.hex | lighten: -8.0}}'
+yellow  = '{{colors.yellow.default.hex | lighten: -8.0}}'
+blue    = '{{colors.blue.default.hex | lighten: -8.0}}'
+magenta = '{{colors.magenta.default.hex | lighten: -8.0}}'
+cyan    = '{{colors.cyan.default.hex | lighten: -8.0}}'
+white   = '{{colors.surface_container_highest.default.hex}}'
+
+[colors.dim]
+black   = '{{colors.outline.default.hex}}'
+red     = '{{colors.red.default.hex | lighten: 12.0}}'
+green   = '{{colors.green.default.hex | lighten: 12.0}}'
+yellow  = '{{colors.yellow.default.hex | lighten: 12.0}}'
+blue    = '{{colors.blue.default.hex | lighten: 12.0}}'
+magenta = '{{colors.magenta.default.hex | lighten: 12.0}}'
+cyan    = '{{colors.cyan.default.hex | lighten: 12.0}}'
+white   = '{{colors.surface_container.default.hex}}'
+<* endif *>
