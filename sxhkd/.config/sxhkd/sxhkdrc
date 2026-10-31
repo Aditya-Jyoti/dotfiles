@@ -8,9 +8,9 @@
 alt + space
     rofi -show drun
 
-# Clipboard (greenclip)
+# Clipboard (greenclip) — with image thumbnails
 super + o
-    rofi -modi " :greenclip print" -show " " -run-command '{cmd}'
+    clipboard
 
 # Calculator
 super + p

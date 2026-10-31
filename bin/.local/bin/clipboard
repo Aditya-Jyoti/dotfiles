@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# clipboard — greenclip history in rofi, with thumbnails for copied images.
+# Picking an entry puts it back on the clipboard. Bound to super + o.
+#
+# greenclip lists images as "image/png <owner> <id>"; the image itself is cached
+# at <image_cache_directory>/<id>.png (see ~/.config/greenclip.toml).
+
+CACHE_DIR=$(awk -F'"' '/image_cache_directory/ { print $2 }' "$HOME/.config/greenclip.toml" 2>/dev/null)
+CACHE_DIR=${CACHE_DIR:-/tmp/greenclip}
+
+mapfile -t entries < <(greenclip print)
+[[ ${#entries[@]} -gt 0 ]] || { dunstify -a clipboard -u low "Clipboard is empty"; exit 0; }
+
+# One rofi row per entry; images show as "image · WxH" with a thumbnail icon
+rows() {
+    local entry id file size
+    for entry in "${entries[@]}"; do
+        if [[ $entry == image/* ]]; then
+            id=${entry##* }
+            file="$CACHE_DIR/$id.png"
+            # "PNG image data, 1920 x 1080, ..." -> "1920×1080"
+            size=$(file -b "$file" 2>/dev/null | awk -F', ' '{ gsub(/ x /, "×", $2); print $2 }')
+            printf 'image · %s\0icon\x1f%s\n' "${size:-?}" "$file"
+        else
+            printf '%s\n' "$entry"
+        fi
+    done
+}
+
+index=$(rows | rofi -dmenu -i -show-icons -format i -p " " \
+    -theme-str 'window { width: 760px; height: 0; }' \
+    -theme-str 'listview { lines: 6; fixed-height: false; }' \
+    -theme-str 'element { children: [element-icon, element-text]; }' \
+    -theme-str 'element-icon { size: 80px; }') || exit 0
+[[ -n $index ]] || exit 0
+
+# Same as greenclip's own rofi mode: printing an entry copies it (text or image)
+greenclip print "${entries[$index]}"
