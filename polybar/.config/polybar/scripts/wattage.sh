@@ -16,4 +16,4 @@ else
     exit 0
 fi
 
-echo "󱐋 ${watts}W"
+echo "${watts}W"
