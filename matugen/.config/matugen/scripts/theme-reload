@@ -24,6 +24,13 @@ pgrep -x dunst >/dev/null && dunstctl reload
 # tmux (all sessions share the server)
 tmux source-file "$C/tmux.conf" >/dev/null 2>&1
 
+# flameshot UI accent (read on next capture)
+F="$HOME/.config/flameshot/flameshot.ini"
+if [ -f "$F" ]; then
+    sed -i -e '/^uiColor=/d' -e '/^contrastUiColor=/d' \
+        -e "/^\[General\]/a uiColor=$primary\ncontrastUiColor=$on_primary" "$F"
+fi
+
 # GTK apps pick up gtk.css on restart; nudge the theme for new windows
 gsettings set org.gnome.desktop.interface color-scheme "prefer-$wallpaper_mode" 2>/dev/null
 

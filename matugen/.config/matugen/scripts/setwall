@@ -7,7 +7,8 @@
 #   setwall --restore       re-apply the last wallpaper (used at login)
 #   setwall --mode dark|light|toggle   switch mode, keep wallpaper
 #
-# Env: WALLDIR (default ~/.wallpapers), MATUGEN_TYPE (default scheme-tonal-spot)
+# Env: WALLDIR (default ~/.wallpapers), MATUGEN_TYPE (default scheme-vibrant),
+#      MATUGEN_PREFER (default value; also darkness|lightness|saturation|less-saturation)
 
 set -euo pipefail
 
@@ -44,7 +45,7 @@ case "${1:-}" in
         img="$current"
         ;;
     -h | --help)
-        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
         exit 0
         ;;
     *)
@@ -61,7 +62,8 @@ if [ "${1:-}" = --restore ] && [ -f "$CACHE/colors.sh" ]; then
     exit 0
 fi
 
-matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-tonal-spot}" --prefer saturation -q
+# "value" follows the image's dominant hue; "saturation" chases small vivid accents
+matugen image "$img" -m "$mode" -t "${MATUGEN_TYPE:-scheme-vibrant}" --prefer "${MATUGEN_PREFER:-value}" -q
 echo "$img" > "$CACHE/current_wallpaper"
 
 "$SCRIPTS/theme-reload"
