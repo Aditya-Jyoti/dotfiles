@@ -1,0 +1,93 @@
+#!/usr/bin/env sh
+
+# Debug log (rewritten every start) — kept out of the dotfiles repo
+set -x
+exec > "${XDG_CACHE_HOME:-$HOME/.cache}/bspwm.log" 2>&1
+
+export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+dbus-update-activation-environment --systemd DISPLAY XAUTHORITY
+
+killall -q picom sxhkd polybar dunst flameshot greenclip blueman-applet xautolock
+
+### ===============================
+### Monitors (run before wallpaper/bars)
+### ===============================
+
+XR=$(xrandr --query)
+INT=$(echo "$XR" | awk '/^eDP[^ ]* connected/ {print $1; exit}')
+EXT=$(echo "$XR" | awk '/ connected/ && $1 !~ /^eDP/ {print $1; exit}')
+
+# Turn off anything unplugged so stale outputs don't hold desktops
+OFF=$(echo "$XR" | awk '/ disconnected/ {printf "--output %s --off ", $1}')
+
+if [ -n "$EXT" ]; then
+    # External: its preferred resolution at the highest refresh rate it offers
+    set -- $(echo "$XR" | awk -v o="$EXT" '
+        $1 == o          { f = 1; next }
+        f && /^[A-Za-z]/ { f = 0 }
+        f && !mode       { mode = $1 }
+        f && $1 == mode  {
+            for (i = 2; i <= NF; i++) { r = $i; gsub(/[*+]/, "", r); if (r + 0 > m) m = r + 0 }
+        }
+        END { print mode, m }')
+    MODE=$1 RATE=$2
+
+    # shellcheck disable=SC2086
+    xrandr $OFF --output "$INT" --auto \
+           --output "$EXT" --mode "$MODE" ${RATE:+--rate "$RATE"} --right-of "$INT" --primary \
+        || xrandr --output "$INT" --auto --output "$EXT" --auto --right-of "$INT" --primary
+
+    bspc monitor "$EXT" -d 1 2 3 4 5
+    bspc monitor "$INT" -d 6 7 8
+else
+    # shellcheck disable=SC2086
+    xrandr $OFF --output "$INT" --auto --primary
+    bspc monitor "$INT" -d 1 2 3 4 5 6 7 8
+fi
+
+bspc config remove_disabled_monitors   true
+bspc config remove_unplugged_monitors  true
+bspc config merge_overlapping_monitors true
+
+### ===============================
+### Theme & wallpaper
+### ===============================
+
+xsetroot -cursor_name left_ptr
+~/.config/matugen/scripts/setwall --restore || feh --no-fehbg --bg-fill ~/.wallpapers/pixelart-mountainrange.png
+~/.config/matugen/scripts/theme-reload   # xrdb + border colours
+
+### ===============================
+### Daemons
+### ===============================
+
+sxhkd &
+dunst &
+picom -b
+flameshot &
+greenclip daemon &
+blueman-applet &
+xautolock -time 30 -locker ~/.local/bin/screenlock &
+
+# One Polybar per monitor (laptop = compact, external = roomy)
+~/.config/polybar/launch.sh
+
+### ===============================
+### BSPWM Configuration
+### ===============================
+
+bspc config border_width         2
+bspc config window_gap           10
+bspc config split_ratio          0.5
+bspc config borderless_monocle   false
+bspc config gapless_monocle      false
+bspc config focus_follows_pointer true
+
+### ===============================
+### Rules
+### ===============================
+
+bspc rule -a 'Alacritty:lazygit-scratch'        state=floating sticky=on rectangle=1200x750+360+165
+bspc rule -a 'AffineScratchpad:notes.omrin.in'  state=floating sticky=on rectangle=1200x750+360+165
+bspc rule -a 'Pavucontrol'                      state=floating
+bspc rule -a 'Blueman-manager'                  state=floating

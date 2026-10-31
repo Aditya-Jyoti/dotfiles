@@ -1,0 +1,177 @@
+#! /bin/sh
+
+#################################################
+# ROFI / LAUNCHERS
+#################################################
+
+# App launcher
+alt + space
+    rofi -show drun
+
+# Clipboard (greenclip)
+super + o
+    rofi -modi " :greenclip print" -show " " -run-command '{cmd}'
+
+# Calculator
+super + p
+    rofi-calculator
+
+super + t
+    tmux-session-picker
+
+# Wallpaper picker -> regenerates matugen colours everywhere
+super + w
+    ~/.config/matugen/scripts/setwall
+
+# Toggle light / dark colours (same wallpaper)
+super + shift + w
+    ~/.config/matugen/scripts/setwall --mode toggle
+
+
+#################################################
+# SCRATCHPADS / APPLICATIONS
+#################################################
+
+# Terminal file explorer
+super + e
+    scratchpad Explorer 'alacritty --class Explorer --title "Explorer" -e yazi'
+
+super + n 
+    scratchpad notes.omrin.in "brave --app=https://notes.omrin.in --class=AffineScratchpad"
+
+super + g 
+    lazygit-scratch
+
+super + l 
+    workspace-switcher
+
+# Spotify
+{KP_7,KP_Home}
+    scratchpad Spotify 'spotify'
+
+# Obsidian
+{KP_9,KP_Prior}
+    scratchpad Obsidian 'obsidian'
+
+#################################################
+# SYSTEM / UTILITIES
+#################################################
+
+# Screenshot
+Print
+    shot
+
+super + shift + s
+    flameshot gui
+
+# Gnome screenshot (selection / UI)
+{KP_1,KP_End}
+    gnome-screenshot
+
+
+#################################################
+# LOCK / POWER
+#################################################
+
+super + Home
+    screenlock
+
+super + Delete
+    screenlock
+
+
+#################################################
+# TERMINAL
+#################################################
+
+super + Return
+    term
+
+super + grave
+    term
+
+#################################################
+# BSPWM — DESKTOP & WINDOW MANAGEMENT
+#################################################
+
+# Move window to desktop (and follow)
+super + shift + {1-9,0}
+    id=$(bspc query -N -n); bspc node -d {1-9,10}; bspc node -f ${id}
+
+# Switch desktops
+super + {1-9}
+    bspc desktop -f {1-9}
+
+# Close focused window
+super + shift + q
+    bspc node -c
+
+# Reload BSPWM
+super + shift + r
+    bspc wm -r
+
+#################################################
+# BSPWM — FOCUS & MOVE
+#################################################
+
+# Vim-style focus / swap
+super + {_,shift} + {h,l,k,j}
+    bspc node -{f,s} {west,east,north,south}
+
+# Arrow key focus
+super + {Left,Right,Up,Down}
+    bspc node -f {west,east,north,south}
+
+#################################################
+# BSPWM — RESIZE
+#################################################
+
+super + shift + {Left,Down,Up,Right}
+    bspc node -z { \
+        left  -30 0 || bspc node -z right -30 0, \
+        bottom 0  30 || bspc node -z top    0  30, \
+        top    0 -30 || bspc node -z bottom 0 -30, \
+        right  30 0 || bspc node -z left   30 0 \
+    }
+
+#################################################
+# BSPWM — STATES
+#################################################
+
+# Toggle floating
+super + space
+    bspc node focused -t \~floating
+
+# Toggle pseudo-tiled
+super + alt + space
+    if [ -z "$(bspc query -N -n focused.pseudo_tiled)" ]; then \
+        bspc node focused -t pseudo_tiled; \
+    else \
+        bspc node focused -t tiled; \
+    fi
+
+# Fullscreen / monocle
+super + f
+    bspc desktop -l next
+
+alt + f
+    bspc node -t \~fullscreen
+
+super + shift + f
+    pbtoggle
+
+# Focus last closed window
+super + Tab
+    bspc node last --focus
+
+
+
+XF86Audio{Raise,Lower}Volume
+    volume-control {up,down}
+
+XF86AudioMute 
+    volume-control mute
+
+# Brightness
+XF86MonBrightness{Down,Up}
+    brightness-control {down,up}
