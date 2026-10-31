@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# brightness-control up|down — step the backlight and show a dunst progress bar.
+set -euo pipefail
+
+STEP=10
+NOTIFY_ID=10002
+
+case "${1:-}" in
+    up)   brightnessctl -q set "${STEP}%+" ;;
+    down) brightnessctl -q --min-value=1 set "${STEP}%-" ;;   # never fully black
+    *)    echo "usage: $(basename "$0") up|down" >&2; exit 1 ;;
+esac
+
+percent=$(( $(brightnessctl get) * 100 / $(brightnessctl max) ))
+
+dunstify -a brightness -u low -t 800 -r "$NOTIFY_ID" \
+    -h "int:value:$percent" "󰃠  Brightness" "${percent}%"

@@ -22,7 +22,7 @@ Each top-level directory is a [stow](https://www.gnu.org/software/stow/) package
 | Different palette style | `MATUGEN_TYPE=scheme-tonal-spot setwall` |
 | Different source colour | `MATUGEN_PREFER=saturation setwall` |
 
-Scripts live in `matugen/.config/matugen/scripts/`. Templates in `matugen/.config/matugen/templates/` → outputs mostly in `~/.cache/matugen/` (not tracked).
+Scripts live in `bin/.local/bin/` (on `$PATH`). Templates in `matugen/.config/matugen/templates/` → outputs mostly in `~/.cache/matugen/` (not tracked).
 
 Themed: polybar, rofi, dunst, bspwm borders, alacritty, tmux, nvim, yazi, btop, GTK 3/4, flameshot, VS Code, Firefox, Dark Reader.
 Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` theme to follow fully.
@@ -35,9 +35,10 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `sxhkd` | keybinds |
 | `polybar` | `launch.sh` picks `bar/laptop` (compact) or `bar/monitor` (roomy) per output |
 | `picom` | glx, v13 animations, blur only behind translucent windows |
-| `matugen` | colour config, templates, `setwall`, `theme-reload` |
+| `matugen` | colour config + templates |
+| `bin` | scripts → `~/.local/bin`: `setwall`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator` |
 | `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 
 ## Not tracked
 Generated colour files, logs, yazi plugins (`ya pkg install` restores them), `.backup-*/`.
-Scripts in `~/.local/bin` (`term`, `scratchpad`, `screenlock`, …) are not in this repo yet.
+Machine-specific tools in `~/.local/bin` (kubectl, graph-easy, uv/pipx shims) stay unmanaged.

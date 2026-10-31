@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# scratchpad <class> [command] [--take-first]
+#
+# Toggle a floating, sticky window by WM class on the focused monitor.
+# If no window with that class exists, run <command> (defaults to <class>).
+#   --take-first   only toggle the first match when several windows share the class
+#
+# e.g. scratchpad Explorer 'alacritty --class Explorer -e yazi'
+
+if [[ $# -eq 0 ]]; then
+    sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+fi
+
+class=$1
+cmd=${2:-$1}
+[[ ${2:-} == --take-first ]] && cmd=$1
+take_first=false
+[[ " $* " == *" --take-first "* ]] && take_first=true
+
+mapfile -t ids < <(xdotool search --classname "$class" 2>/dev/null)
+$take_first && ids=("${ids[@]:0:1}")
+
+if [[ ${#ids[@]} -eq 0 ]]; then
+    # sh -c so quoted arguments inside $cmd survive
+    setsid -f sh -c "$cmd" >/dev/null 2>&1
+    exit 0
+fi
+
+for id in "${ids[@]}"; do
+    bspc node "$id" --flag hidden --to-monitor focused --focus --flag sticky=on --state floating
+done

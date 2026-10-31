@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# screenlock — i3lock-color, themed from matugen.
+# Ring + clock are centred on every monitor (no hardcoded screen/positions).
+#
+# Env: LOCK_BLUR (default 18) — blur strength of the screenshot behind the lock
+
+COLORS="$HOME/.cache/matugen/colors.sh"
+
+pgrep -x i3lock >/dev/null && exit 0   # already locked
+
+# Never refuse to lock just because colours are missing — fall back to defaults
+# shellcheck source=/dev/null
+[[ -f $COLORS ]] && source "$COLORS"
+
+# i3lock wants RRGGBB[AA] without the '#'
+hex() { local v=${1#\#}; printf '%s%s' "$v" "${2:-}"; }
+
+text=$(hex "${on_surface:-#e8e0e8}")
+subtext=$(hex "${on_surface_variant:-#cec3d1}")
+inside=$(hex "${surface:-#161217}" cc)       # ~80% opaque
+ring=$(hex "${outline:-#968e98}")
+accent=$(hex "${primary:-#deb8f7}")
+verify=$(hex "${tertiary:-#f4b7ba}")
+wrong=$(hex "${error:-#ffb4ab}")
+clear=00000000
+
+FONT="FiraCode Nerd Font"
+
+i3lock \
+    --ignore-empty-password \
+    --blur "${LOCK_BLUR:-18}" \
+    --indicator \
+    --clock \
+    \
+    --radius 200 \
+    --ring-width 12 \
+    \
+    --inside-color="$inside"      --ring-color="$ring" \
+    --insidever-color="$inside"   --ringver-color="$verify" \
+    --insidewrong-color="$inside" --ringwrong-color="$wrong" \
+    --line-color="$clear"         --separator-color="$clear" \
+    --keyhl-color="$accent"       --bshl-color="$wrong" \
+    \
+    --time-color="$text"   --date-color="$subtext" \
+    --verif-color="$text"  --wrong-color="$text" \
+    --layout-color="$text" --modif-color="$subtext" \
+    \
+    --time-str="%H:%M" \
+    --date-str="%A, %d %B" \
+    --time-font="$FONT" --date-font="$FONT" \
+    --verif-font="$FONT" --wrong-font="$FONT" \
+    --time-size=72 \
+    --date-size=20 \
+    \
+    --verif-text="Verifying…" \
+    --wrong-text="Incorrect" \
+    --noinput-text="Empty" \
+    \
+    --pass-media-keys \
+    --pass-volume-keys \
+    --pass-screen-keys

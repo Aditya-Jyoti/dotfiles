@@ -54,8 +54,8 @@ bspc config merge_overlapping_monitors true
 ### ===============================
 
 xsetroot -cursor_name left_ptr
-~/.config/matugen/scripts/setwall --restore || feh --no-fehbg --bg-fill ~/.wallpapers/pixelart-mountainrange.png
-~/.config/matugen/scripts/theme-reload   # xrdb + border colours
+setwall --restore || feh --no-fehbg --bg-fill ~/.wallpapers/pixelart-mountainrange.png
+theme-reload   # xrdb + border colours
 
 ### ===============================
 ### Daemons
@@ -67,7 +67,7 @@ picom -b
 flameshot &
 greenclip daemon &
 blueman-applet &
-xautolock -time 30 -locker ~/.local/bin/screenlock &
+xautolock -time 30 -locker screenlock &
 
 # One Polybar per monitor (laptop = compact, external = roomy)
 ~/.config/polybar/launch.sh

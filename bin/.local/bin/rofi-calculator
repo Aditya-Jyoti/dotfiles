@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# rofi-calculator — rofi calc mode; each answer is copied to the clipboard.
+# Reopens after every result so calculations can be chained; Esc quits.
+
+while result=$(rofi -show calc -modi calc -no-show-match -no-sort) && [[ -n $result ]]; do
+    answer=${result##* }   # "2 + 2 = 4" -> "4"
+    printf '%s' "$answer" | xclip -selection clipboard
+    dunstify -a calculator -u low "$result" "copied: $answer"
+done

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# workspace-switcher — rofi list of every window (by desktop); focus the one picked.
+# Bound to super + l in sxhkdrc.
+
+ids=()
+lines=()
+
+# Desktops in bspwm order, then the visible windows on each
+while read -r desktop; do
+    name=$(bspc query -D -d "$desktop" --names)
+
+    while read -r wid; do
+        [[ -n $wid ]] || continue
+        title=$(xdotool getwindowname "$wid" 2>/dev/null) || continue
+        class=$(xprop -id "$wid" WM_CLASS 2>/dev/null | awk -F'"' '{ print $4 }')
+
+        (( ${#title} > 60 )) && title="${title:0:57}..."
+
+        ids+=("$wid")
+        lines+=("$(printf '%-2s │  %-14s  %s' "$name" "${class:-?}" "$title")")
+    done < <(bspc query -N -d "$desktop" -n '.window.!hidden')
+done < <(bspc query -D)
+
+[[ ${#ids[@]} -gt 0 ]] || exit 0
+
+index=$(printf '%s\n' "${lines[@]}" | rofi -dmenu -i -p "  switch to" -format i) || exit 0
+[[ -n $index ]] || exit 0
+
+# Focusing a node also switches to its desktop
+bspc node "${ids[$index]}" --focus

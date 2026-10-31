@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# shot — instant screenshot of the monitor under the cursor; saved and copied.
+# (Use `flameshot gui` / super+shift+s to select a region instead.)
+
+exec flameshot screen --clipboard --path "$HOME/Pictures/Screenshots"

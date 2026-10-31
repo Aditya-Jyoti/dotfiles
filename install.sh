@@ -32,5 +32,5 @@ done
 
 # First run: generate colours from the last (or a default) wallpaper
 if [ ! -f "$HOME/.cache/matugen/colors.sh" ] && [ -d "$HOME/.wallpapers" ]; then
-    "$HOME/.config/matugen/scripts/setwall" --random || true
+    "$HOME/.local/bin/setwall" --random || true
 fi

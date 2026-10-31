@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# volume-control up|down|mute — change the default sink and show a dunst progress bar.
+set -euo pipefail
+
+STEP=5
+MAX=1.0   # cap at 100%
+NOTIFY_ID=10001
+SINK=@DEFAULT_AUDIO_SINK@
+
+case "${1:-}" in
+    up)   wpctl set-volume -l "$MAX" "$SINK" "${STEP}%+" ;;
+    down) wpctl set-volume "$SINK" "${STEP}%-" ;;
+    mute) wpctl set-mute "$SINK" toggle ;;
+    *)    echo "usage: $(basename "$0") up|down|mute" >&2; exit 1 ;;
+esac
+
+# "Volume: 0.45" or "Volume: 0.45 [MUTED]"
+status=$(wpctl get-volume "$SINK")
+percent=$(awk '{ print int($2 * 100 + 0.5) }' <<<"$status")
+
+if [[ $status == *MUTED* ]]; then
+    dunstify -a volume -u low -t 800 -r "$NOTIFY_ID" "󰖁  Volume" "Muted"
+else
+    dunstify -a volume -u low -t 800 -r "$NOTIFY_ID" \
+        -h "int:value:$percent" "󰕾  Volume" "${percent}%"
+fi

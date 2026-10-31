@@ -21,11 +21,11 @@ super + t
 
 # Wallpaper picker -> regenerates matugen colours everywhere
 super + w
-    ~/.config/matugen/scripts/setwall
+    setwall
 
 # Toggle light / dark colours (same wallpaper)
 super + shift + w
-    ~/.config/matugen/scripts/setwall --mode toggle
+    setwall --mode toggle
 
 
 #################################################

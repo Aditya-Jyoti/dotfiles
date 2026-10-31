@@ -1,4 +1,4 @@
-# Run via ~/.config/matugen/scripts/setwall (handles mode, --prefer and reloads).
+# Run via `setwall` (bin package) (handles mode, --prefer and reloads).
 # Generated files go to ~/.cache/matugen unless an app needs them in place.
 
 [config]

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# term [alacritty args] — alacritty with a font size suited to the focused monitor.
+
+case "$(bspc query -M -m focused --names)" in
+    eDP*) size=7 ;;    # laptop panel
+    *)    size=10 ;;   # external monitor
+esac
+
+exec alacritty -o "font.size=$size" "$@"
