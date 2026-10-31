@@ -1,0 +1,3 @@
+*.bak
+.backup-*/
+dunst/.config/dunst/dunstrc.d/50-matugen.conf

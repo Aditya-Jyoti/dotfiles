@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 2,
+  "applyToListedOnly": false,
+  "automation": {
+    "enabled": false,
+    "mode": "",
+    "behavior": "OnOff"
+  },
+  "changeBrowserTheme": false,
+  "customThemes": [],
+  "enableForPDF": true,
+  "enableForProtectedPages": false,
+  "enabled": true,
+  "fetchNews": false,
+  "location": {
+    "latitude": null,
+    "longitude": null
+  },
+  "previewNewDesign": true,
+  "presets": [],
+  "siteList": [],
+  "siteListEnabled": [],
+  "syncSettings": false,
+  "syncSitesFixes": false,
+  "theme": {
+    "mode": 1,
+    "brightness": 100,
+    "contrast": 100,
+    "grayscale": 0,
+    "sepia": 0,
+    "useFont": false,
+    "fontFamily": "Open Sans",
+    "textStroke": 0,
+    "engine": "dynamicTheme",
+    "stylesheet": "",
+    "darkSchemeBackgroundColor": "{{colors.surface.default.hex}}",
+    "darkSchemeTextColor": "{{colors.on_surface.default.hex}}",
+    "lightSchemeBackgroundColor": "{{colors.surface.default.hex}}",
+    "lightSchemeTextColor": "{{colors.on_surface.default.hex}}",
+    "scrollbarColor": "{{colors.surface_container.default.hex}}",
+    "selectionColor": "{{colors.primary.default.hex}}",
+    "styleSystemControls": false,
+    "lightColorScheme": "Default",
+    "darkColorScheme": "Default",
+    "immediateModify": false
+  }
+}

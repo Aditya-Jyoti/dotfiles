@@ -1,0 +1,59 @@
+[config]
+mode = "dark"
+
+[templates.alacritty]
+input_path = "~/.config/matugen/templates/alacritty.toml"
+output_path = "~/.cache/matugen/alacritty.toml"
+
+[templates.neovim]
+input_path = "~/.config/matugen/templates/nvim.lua"
+output_path = '~/.cache/matugen/generated.lua'
+
+[templates.rofi]
+input_path = "~/.config/matugen/templates/rofi.rasi"
+output_path = "~/.cache/matugen/rofi.rasi"
+
+#[templates.spicetify]
+#input_path = "~/.config/matugen/templates/spicetify.ini"
+#output_path = "~/.config/spicetify/Themes/matugen/color.ini"
+
+[templates.vscode]
+input_path = "~/.config/matugen/templates/vscode.json"
+output_path = "~/.cache/matugen/vscode.json"
+post_hook = "jq -s '.[0] * .[1]' ~/.config/Code/User/settings.json ~/.cache/matugen/vscode.json > /tmp/vscode-settings.json && mv /tmp/vscode-settings.json ~/.config/Code/User/settings.json"
+
+#[templates.obsidian]
+#input_path = "~/.config/matugen/templates/obsidian.css"
+#output_path = "~/Obsidian/.obsidian/snippets/obsidian.css"
+
+#[templates.zathura]
+#input_path = "~/.config/matugen/templates/zathurarc"
+#output_path = "~/.config/zathura/zathurarc"
+
+[templates.dunst]
+input_path = "~/.config/matugen/templates/dunstrc"
+output_path = "~/.config/dunst/dunstrc"
+
+#[templates.yazi]
+#input_path = "~/.config/matugen/templates/yazi.toml"
+#output_path = "~/.config/yazi/theme.toml"
+
+[templates.colors]
+input_path = "~/.config/matugen/templates/colors.sh"
+output_path = "~/.cache/matugen/colors.sh"
+
+[templates.xresources]
+input_path = "~/.config/matugen/templates/colors.Xresources"
+output_path = "~/.cache/matugen/colors.Xresources"
+
+[templates.firefox]
+input_path  = "~/.config/matugen/templates/firefox.css"
+output_path = "~/.config/mozilla/firefox/0hbo14bf.default-release/chrome/matugen-colors.css"
+
+[templates.darkreader]
+input_path  = "~/.config/matugen/templates/dark-reader.json"
+output_path = "~/.config/dark-reader/settings.json"
+
+[templates.yazi]
+input_path = "~/.config/matugen/templates/yazi.toml"
+output_path = "~/.config/yazi/theme.toml"
