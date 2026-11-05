@@ -43,10 +43,43 @@ list_walls() {
     find -L "$WALLDIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) "$@"
 }
 
+# Square, centre-cropped thumbnail (cached; full-size images make rofi slow).
+# Square because rofi draws icons in a square box: anything else gets bars around it.
+thumb() {
+    local key file
+    key=$(stat -c '%n %Y' "$1" | md5sum | cut -c1-16)
+    file="$HOME/.cache/setwall/thumbs/$key.jpg"
+    [ -f "$file" ] || {
+        mkdir -p "${file%/*}"
+        ffmpeg -loglevel error -y -i "$1" -frames:v 1 \
+            -vf 'scale=400:400:force_original_aspect_ratio=increase,crop=400:400' "$file"
+    }
+    echo "$file"
+}
+
+# Rofi grid of thumbnails only; the hidden text (file name) still works for type-to-filter
+pick_wall() {
+    local walls index w selected=0
+    mapfile -t walls < <(list_walls | sort)
+    [ ${#walls[@]} -gt 0 ] || { echo "setwall: no images in $WALLDIR" >&2; return 1; }
+    for index in "${!walls[@]}"; do [ "${walls[index]}" = "$current" ] && selected=$index; done
+    local rows=$(( (${#walls[@]} + 2) / 3 )); [ $rows -le 3 ] || rows=3
+    index=$(for w in "${walls[@]}"; do
+                printf '%s\0icon\x1f%s\n' "${w#"$WALLDIR"/}" "$(thumb "$w")"
+            done |
+        rofi -dmenu -i -show-icons -format i -p "󰸉 " \
+             -selected-row "$selected" \
+             -theme-str 'window { width: 1000px; height: 0; }' \
+             -theme-str "listview { columns: 3; lines: $rows; spacing: 12px; flow: horizontal; }" \
+             -theme-str 'element { children: [element-icon]; padding: 5px; border-radius: 10px; }' \
+             -theme-str 'element normal.normal, element alternate.normal { background-color: transparent; }' \
+             -theme-str 'element-icon { size: 300px; }') || return 1
+    [ -n "$index" ] && echo "${walls[$index]}"
+}
+
 case "${1:-}" in
     "")
-        name=$(list_walls -printf '%P\n' | sort | rofi -dmenu -i -p "󰸉 ") || exit 0
-        img="$WALLDIR/$name"
+        img=$(pick_wall) || exit 0
         ;;
     --random)
         img=$(list_walls | grep -vxF "$current" | shuf -n1)
