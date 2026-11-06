@@ -7,14 +7,14 @@ IFACE=$(ip route | awk '/default/ {print $5; exit}')
 # fallback: pick first wireless interface
 [ -z "$IFACE" ] && IFACE=$(iw dev 2>/dev/null | awk '/Interface/ {print $2; exit}')
 
-if [ -z "$IFACE" ] || ! iw dev "$IFACE" info &>/dev/null; then
-    # Not a wireless interface or no wireless
-    CONNECTED=$(ip link show "$IFACE" 2>/dev/null | grep -c "state UP" || echo 0)
-    if [ "$CONNECTED" -gt 0 ]; then
-        echo "󰈀"  # ethernet icon
-    else
-        echo "󰤭"  # no wifi
-    fi
+if [ -z "$IFACE" ]; then
+    echo "󰤭"  # no connection
+    exit 0
+fi
+
+if ! iw dev "$IFACE" info &>/dev/null; then
+    # Default route goes over a wired / USB-tethered link, so it's connected
+    echo "󰈀"  # ethernet icon
     exit 0
 fi
 
