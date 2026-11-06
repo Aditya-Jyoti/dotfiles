@@ -8,6 +8,11 @@ IFACE=$(ip route | awk '/default/ {print $5; exit}')
 SSID=$(iw dev "$IFACE" link 2>/dev/null | awk '/SSID/ {print $2}')
 IP=$(ip -4 addr show "$IFACE" 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1)
 
+if [ -z "$SSID" ] && [ -n "$IP" ]; then
+    dunstify -u normal -i network-wired -t 5000 "󰈀  Wired" "$IFACE\nIP: $IP"
+    exit 0
+fi
+
 if [ -z "$SSID" ]; then
     dunstify -u normal -i network-wireless-offline -t 4000 \
         "󰤭  WiFi" "Not connected"
