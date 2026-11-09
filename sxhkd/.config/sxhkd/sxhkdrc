@@ -12,6 +12,10 @@ alt + space
 super + o
     clipboard
 
+# Calendar popup (same as clicking the clock)
+super + c
+    calendar-popup
+
 # Calculator
 super + p
     rofi-calculator

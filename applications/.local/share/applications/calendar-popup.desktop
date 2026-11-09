@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Calendar
+GenericName=Calendar
+Comment=Month view of the synced calendar (khal)
+Exec=calendar-popup
+Icon=x-office-calendar
+Terminal=false
+Categories=Office;Calendar;
+Keywords=calendar;events;khal;date;

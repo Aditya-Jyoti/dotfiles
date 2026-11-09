@@ -28,6 +28,13 @@ def khal(*args):
     return subprocess.run(["khal", *args], capture_output=True, text=True).stdout
 
 
+def khal_err(*args):
+    """Run khal; return its error text ("" on success)."""
+    r = subprocess.run(["khal", *args], capture_output=True, text=True)
+    errs = [l for l in r.stderr.splitlines() if l.startswith(("critical", "error"))]
+    return "" if r.returncode == 0 and not errs else (errs[0] if errs else r.stderr.strip())
+
+
 def month_events(year, month):
     """{date: [event, ...]} for every day of the month (khal prints one JSON line per day)."""
     first = dt.date(year, month, 1)
@@ -61,6 +68,7 @@ class App:
         self.cursor = 0  # selected event in the day list
         self.loaded = None
         self.events = {}
+        self.message = ""  # one-off status line (errors), cleared on next key
         curses.curs_set(0)
         curses.use_default_colors()
         curses.init_pair(1, 3, -1)   # accent: days with events, times
@@ -118,20 +126,27 @@ class App:
             s.addstr(y + 3 + i, 1, f"{when:<12}", curses.color_pair(1) | attr)
             s.addstr(y + 3 + i, 13, line[: w - 14].ljust(w - 14), attr)
 
-        hint = "n new · e edit · d del · t today"
-        s.addstr(h - 1, max((w - len(hint)) // 2, 0), hint[: w - 1], curses.color_pair(2))
+        if self.message:
+            s.addstr(h - 1, 1, self.message[: w - 2], curses.color_pair(4))
+        else:
+            hint = "n new · e edit · d del · t today"
+            s.addstr(h - 1, max((w - len(hint)) // 2, 0), hint[: w - 1], curses.color_pair(2))
         s.refresh()
 
     # ---------- actions ----------
-    def prompt(self, label):
+    def prompt(self, label, help=""):
+        """Read a line at the bottom; `help` goes on the line above it."""
         h, w = self.scr.getmaxyx()
-        self.scr.move(h - 1, 0)
-        self.scr.clrtoeol()
+        for row in (h - 2, h - 1):
+            self.scr.move(row, 0)
+            self.scr.clrtoeol()
+        if help:
+            self.scr.addstr(h - 2, 1, help[: w - 2], curses.color_pair(2))
         self.scr.addstr(h - 1, 1, label, curses.A_BOLD)
         curses.echo()
         curses.curs_set(1)
         try:
-            text = self.scr.getstr(h - 1, len(label) + 2, w - len(label) - 4).decode().strip()
+            text = self.scr.getstr(h - 1, len(label) + 2, max(w - len(label) - 4, 1)).decode().strip()
         except KeyboardInterrupt:
             text = ""
         curses.noecho()
@@ -139,14 +154,15 @@ class App:
         return text
 
     def new_event(self):
-        title = self.prompt("Title:")
+        title = self.prompt("Title:", f"New event on {self.sel.strftime('%a %d %b')}")
         if not title:
             return
-        when = self.prompt("Time (blank = all day, 18:00 or 18:00-19:30):")
+        self.draw()
+        when = self.prompt("Time:", "blank = all day · 18:00 · 18:00-19:30")
         args = ["new", self.sel.strftime(DATE_FMT)]
         if when:
-            args += when.replace("–", "-").split("-", 1)
-        khal(*args, title)
+            args += [t.strip() for t in when.replace("–", "-").split("-", 1)]
+        self.message = khal_err(*args, title)
         self.load(force=True)
 
     def selected_event(self):
@@ -158,7 +174,7 @@ class App:
         if not ev:
             return
         extra = " (all repeats)" if ev.get("repeat-symbol") else ""
-        if self.prompt(f"Delete '{ev['title']}'{extra}? y/N").lower() != "y":
+        if self.prompt("Delete? y/N", f"'{ev['title']}'{extra}").lower() != "y":
             return
         f = event_file(ev["uid"])
         if f:
@@ -196,6 +212,7 @@ class App:
             self.load()
             self.draw()
             k = self.scr.getch()
+            self.message = ""
             if k in (ord("q"), 27):
                 return
             if k in keys:
