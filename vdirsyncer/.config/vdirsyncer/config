@@ -7,7 +7,7 @@
 #   3. vdirsyncer discover && vdirsyncer sync
 #   4. systemctl --user enable --now vdirsyncer.timer   (syncs every 15 min)
 #   5. set default_calendar in ~/.config/khal/config to the synced calendar's
-#      folder name (ls ~/.local/share/calendars) so new events go to the server
+#      display name (khal printcalendars) so new events go to the server
 
 [general]
 status_path = "~/.local/share/vdirsyncer/status/"

@@ -9,14 +9,15 @@
 
 [locale]
   timeformat         = %H:%M
-  dateformat         = %d %b
+  # all include the year: khal parses typed dates with these too
+  dateformat         = %d %b %Y
   longdateformat     = %d %b %Y
-  datetimeformat     = %d %b %H:%M
+  datetimeformat     = %d %b %Y %H:%M
   longdatetimeformat = %d %b %Y %H:%M
   firstweekday       = 0   # Monday
 
 [default]
-  default_calendar     = personal
+  default_calendar     = Personal
   highlight_event_days = True
   timedelta            = 7d   # agenda length in `khal list`
 
