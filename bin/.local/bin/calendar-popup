@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# calendar-popup — toggle a small khal calendar under the polybar clock.
+# Opens on the monitor under the mouse; click the clock again (or q) to close.
+# In the calendar: n = new event, enter = view/edit, d = delete, t = today.
+
+CLASS=CalendarPopup
+W=880 H=480
+
+if pkill -f "alacritty --class $CLASS"; then
+    exit 0
+fi
+
+# Monitor under the mouse (the one whose clock was clicked)
+read -r name mx my mw <<<"$({ bspc query -T -m pointed 2>/dev/null || bspc query -T -m focused; } |
+    jq -r '"\(.name) \(.rectangle.x) \(.rectangle.y) \(.rectangle.width)"')"
+
+# Just below the bar: offset-y + height + gap (see polybar config.ini)
+case $name in eDP*) bar=44 ;; *) bar=54 ;; esac
+x=$(( mx + (mw - W) / 2 ))
+y=$(( my + bar ))
+bspc rule -a "$CLASS" -o state=floating sticky=on rectangle="${W}x${H}+${x}+${y}"
+
+# CalDAV sync (only once vdirsyncer is configured): pull before, push after
+sync() {
+    command -v vdirsyncer >/dev/null && ! grep -q CHANGE-ME "$HOME/.config/vdirsyncer/config" 2>/dev/null &&
+        vdirsyncer sync >/dev/null 2>&1
+}
+sync &
+alacritty --class "$CLASS" --title Calendar -o font.size=10 -e ikhal
+sync

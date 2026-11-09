@@ -1,0 +1,26 @@
+# khal — calendar behind the polybar clock popup (calendar-popup).
+# Calendars are vdirs under ~/.local/share/calendars/: "personal" is local,
+# anything else there is synced from CalDAV by vdirsyncer.
+
+[calendars]
+  [[calendars]]
+    path = ~/.local/share/calendars/*
+    type = discover
+
+[locale]
+  timeformat         = %H:%M
+  dateformat         = %d %b
+  longdateformat     = %d %b %Y
+  datetimeformat     = %d %b %H:%M
+  longdatetimeformat = %d %b %Y %H:%M
+  firstweekday       = 0   # Monday
+
+[default]
+  default_calendar     = personal
+  highlight_event_days = True
+  timedelta            = 7d   # agenda length in `khal list`
+
+[view]
+  frame         = color
+  dynamic_days  = False
+  event_view_always_visible = True

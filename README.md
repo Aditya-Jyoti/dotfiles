@@ -42,8 +42,9 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `polybar` | `launch.sh` picks `bar/laptop` (compact) or `bar/monitor` (roomy) per output |
 | `picom` | glx, v13 animations, blur only behind translucent windows |
 | `matugen` | colour config + templates |
-| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays` |
+| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays`, `calendar-popup` |
 | `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
+| `khal` `vdirsyncer` | calendar behind the polybar clock (click it); CalDAV setup steps are in the vdirsyncer config |
 
 ## Not tracked
 Generated colour files, logs, yazi plugins (`ya pkg install` restores them), `.backup-*/`.

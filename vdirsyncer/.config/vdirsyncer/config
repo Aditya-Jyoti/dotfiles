@@ -1,0 +1,31 @@
+# vdirsyncer — two-way sync between a CalDAV server and the local calendars khal reads.
+#
+# Setup:
+#   1. fill in url + username below
+#   2. put the password (an app password if your provider has them) in
+#      ~/.local/share/vdirsyncer/caldav-password  (chmod 600; not in git)
+#   3. vdirsyncer discover && vdirsyncer sync
+#   4. systemctl --user enable --now vdirsyncer.timer   (syncs every 15 min)
+#   5. set default_calendar in ~/.config/khal/config to the synced calendar's
+#      folder name (ls ~/.local/share/calendars) so new events go to the server
+
+[general]
+status_path = "~/.local/share/vdirsyncer/status/"
+
+[pair calendar]
+a = "calendar_local"
+b = "calendar_remote"
+collections = ["from b"]   # every calendar on the server
+metadata = ["color", "displayname"]
+conflict_resolution = "b wins"
+
+[storage calendar_local]
+type = "filesystem"
+path = "~/.local/share/calendars/"
+fileext = ".ics"
+
+[storage calendar_remote]
+type = "caldav"
+url = "https://CHANGE-ME/"
+username = "CHANGE-ME"
+password.fetch = ["command", "cat", "~/.local/share/vdirsyncer/caldav-password"]
