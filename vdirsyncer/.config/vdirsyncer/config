@@ -15,17 +15,18 @@ status_path = "~/.local/share/vdirsyncer/status/"
 [pair calendar]
 a = "calendar_local"
 b = "calendar_remote"
-collections = ["from b"]   # every calendar on the server
+# url below is one calendar ("life"), not the whole account
+collections = null
 metadata = ["color", "displayname"]
 conflict_resolution = "b wins"
 
 [storage calendar_local]
 type = "filesystem"
-path = "~/.local/share/calendars/"
+path = "~/.local/share/calendars/life/"
 fileext = ".ics"
 
 [storage calendar_remote]
 type = "caldav"
-url = "https://CHANGE-ME/"
-username = "CHANGE-ME"
+url = "https://caldav-server.omrin.in/omrin/life/"
+username = "omrin"
 password.fetch = ["command", "cat", "~/.local/share/vdirsyncer/caldav-password"]
