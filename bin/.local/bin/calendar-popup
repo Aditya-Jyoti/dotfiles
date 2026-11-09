@@ -4,7 +4,7 @@
 # Keys: arrows move, [ ] month, n new, e edit, d delete, t today (see calendar-tui).
 
 CLASS=CalendarPopup
-W=360 H=400
+W=400 H=430
 
 if pkill -f "alacritty --class $CLASS"; then
     exit 0

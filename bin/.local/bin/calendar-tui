@@ -7,7 +7,7 @@ events underneath.
   arrows / hjkl   move day          [ ]  previous / next month
   t               today             tab  next event of the day
   n               new event on the selected day
-  e               edit event (khal) d    delete event
+  e               edit event        d    delete event
   q / Esc         close
 """
 
@@ -18,6 +18,9 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+import icalendar  # comes with khal
 
 CAL_DIR = Path.home() / ".local/share/calendars"
 DATE_FMT = "%d %b %Y"  # must match [locale] dateformat in ~/.config/khal/config
@@ -58,6 +61,70 @@ def event_file(uid):
         if f"UID:{uid}" in f.read_text(errors="ignore"):
             return f
     return None
+
+
+def local_tz():
+    try:
+        return ZoneInfo(str(Path("/etc/localtime").resolve()).split("zoneinfo/", 1)[1])
+    except (IndexError, ValueError, OSError):
+        return dt.datetime.now().astimezone().tzinfo
+
+
+def parse_time(text):
+    return dt.datetime.strptime(text.strip(), "%H:%M").time()
+
+
+def edit_ics(path, uid, title=None, date=None, times=None):
+    """Change summary / date / time of the master VEVENT with this UID.
+
+    date: datetime.date or None (keep). times: None (keep), "allday",
+    (start,) or (start, end) as datetime.time. Repeats move with the event.
+    """
+    cal = icalendar.Calendar.from_ical(path.read_bytes())
+    ev = next(c for c in cal.walk("VEVENT")
+              if str(c.get("UID")) == uid and "RECURRENCE-ID" not in c)
+
+    start = ev.decoded("DTSTART")
+    if "DTEND" in ev:
+        end = ev.decoded("DTEND")
+    else:
+        end = start + (ev.decoded("DURATION") if "DURATION" in ev else dt.timedelta(hours=1))
+    allday = not isinstance(start, dt.datetime)
+    length = end - start
+    tz = local_tz() if allday or start.tzinfo is None else start.tzinfo
+    day = date or (start if allday else start.date())
+
+    if times == "allday" or (times is None and allday):
+        new_start = day
+        new_end = day + (length if allday else dt.timedelta(days=1))
+    else:
+        if times is None:                 # keep the clock times, maybe on a new day
+            t0, t1 = start.time(), None
+        else:
+            t0, t1 = times[0], times[1] if len(times) > 1 else None
+        new_start = dt.datetime.combine(day, t0, tz)
+        if t1 is not None:
+            new_end = dt.datetime.combine(day, t1, tz)
+            if new_end <= new_start:      # e.g. 23:00-01:00
+                new_end += dt.timedelta(days=1)
+        else:
+            new_end = new_start + (dt.timedelta(hours=1) if allday else length)
+
+    if title:
+        ev["SUMMARY"] = icalendar.vText(title)
+    for key in ("DTSTART", "DTEND", "DURATION"):
+        ev.pop(key, None)
+    ev.add("DTSTART", new_start)
+    ev.add("DTEND", new_end)
+    now = dt.datetime.now(dt.timezone.utc)
+    for key in ("DTSTAMP", "LAST-MODIFIED"):
+        ev.pop(key, None)
+        ev.add(key, now)
+    ev["SEQUENCE"] = int(ev.get("SEQUENCE", 0)) + 1
+
+    tmp = path.with_suffix(".tmp")
+    tmp.write_bytes(cal.to_ical())
+    tmp.replace(path)
 
 
 class App:
@@ -130,6 +197,8 @@ class App:
             s.addstr(h - 1, 1, self.message[: w - 2], curses.color_pair(4))
         else:
             hint = "n new · e edit · d del · t today"
+            if len(hint) > w - 2:
+                hint = "n · e · d · t · q"
             s.addstr(h - 1, max((w - len(hint)) // 2, 0), hint[: w - 1], curses.color_pair(2))
         s.refresh()
 
@@ -182,12 +251,44 @@ class App:
         self.load(force=True)
 
     def edit_event(self):
+        """Title / date / time of the selected event; Enter keeps the current value."""
         ev = self.selected_event()
         if not ev:
             return
-        curses.endwin()
-        subprocess.run(["khal", "edit", "--show-past", ev["title"]])
-        self.scr.refresh()
+        allday = ev.get("all-day") == "True"
+        when = "all day" if allday else f"{ev['start-time']}-{ev['end-time']}"
+
+        title = self.prompt("Title:", f"keep: {ev['title']}")
+        self.draw()
+        date_txt = self.prompt("Date:", f"keep: {self.sel.strftime(DATE_FMT)}")
+        self.draw()
+        time_txt = self.prompt("Time:", f"keep: {when} · all day · 18:00-19:30")
+
+        try:
+            date = dt.datetime.strptime(date_txt, DATE_FMT).date() if date_txt else None
+            if not time_txt:
+                times = None
+            elif time_txt.lower().replace(" ", "") in ("allday", "a"):
+                times = "allday"
+            else:
+                times = tuple(parse_time(t) for t in time_txt.replace("–", "-").split("-", 1))
+        except ValueError:
+            self.message = "Use dates like 16 Nov 2026 and times like 18:00-19:30"
+            return
+        if not (title or date or times):
+            return
+
+        path = event_file(ev["uid"])
+        if not path:
+            self.message = "Couldn't find that event's file"
+            return
+        try:
+            edit_ics(path, ev["uid"], title, date, times)
+        except Exception as e:  # malformed ics etc. — show it, don't crash the popup
+            self.message = f"Edit failed: {e}"
+            return
+        if date:
+            self.sel = date
         self.load(force=True)
 
     def move(self, days=0, months=0):
