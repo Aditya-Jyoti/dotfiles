@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # calendar-popup — toggle a small khal calendar under the polybar clock.
 # Opens on the monitor under the mouse; click the clock again (or q) to close.
-# In the calendar: n = new event, enter = view/edit, d = delete, t = today.
+# Keys: arrows move, [ ] month, n new, e edit, d delete, t today (see calendar-tui).
 
 CLASS=CalendarPopup
-W=880 H=480
+W=340 H=400
 
 if pkill -f "alacritty --class $CLASS"; then
     exit 0
@@ -26,5 +26,5 @@ sync() {
         vdirsyncer sync >/dev/null 2>&1
 }
 sync &
-alacritty --class "$CLASS" --title Calendar -o font.size=10 -e ikhal
+alacritty --class "$CLASS" --title Calendar -o font.size=10 -e calendar-tui
 sync

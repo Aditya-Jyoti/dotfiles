@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""calendar-tui — one-month calendar for the polybar clock popup (data from khal).
+
+Month grid on top (days with events in the accent colour), the selected day's
+events underneath.
+
+  arrows / hjkl   move day          [ ]  previous / next month
+  t               today             tab  next event of the day
+  n               new event on the selected day
+  e               edit event (khal) d    delete event
+  q / Esc         close
+"""
+
+import calendar
+import curses
+import datetime as dt
+import json
+import os
+import subprocess
+from pathlib import Path
+
+CAL_DIR = Path.home() / ".local/share/calendars"
+DATE_FMT = "%d %b %Y"  # must match [locale] dateformat in ~/.config/khal/config
+FIELDS = ["title", "start-time", "end-time", "all-day", "uid", "repeat-symbol"]
+
+
+def khal(*args):
+    return subprocess.run(["khal", *args], capture_output=True, text=True).stdout
+
+
+def month_events(year, month):
+    """{date: [event, ...]} for every day of the month (khal prints one JSON line per day)."""
+    first = dt.date(year, month, 1)
+    days = calendar.monthrange(year, month)[1]
+    last = first + dt.timedelta(days=days - 1)
+    args = ["list"]
+    for f in FIELDS:
+        args += ["--json", f]
+    out = khal(*args, first.strftime(DATE_FMT), last.strftime(DATE_FMT)).splitlines()
+    events = {}
+    for i, line in enumerate(out[:days]):
+        try:
+            events[first + dt.timedelta(days=i)] = json.loads(line)
+        except json.JSONDecodeError:
+            pass
+    return events
+
+
+def event_file(uid):
+    for f in CAL_DIR.glob("*/*.ics"):
+        if f"UID:{uid}" in f.read_text(errors="ignore"):
+            return f
+    return None
+
+
+class App:
+    def __init__(self, scr):
+        self.scr = scr
+        self.today = dt.date.today()
+        self.sel = self.today
+        self.cursor = 0  # selected event in the day list
+        self.loaded = None
+        self.events = {}
+        curses.curs_set(0)
+        curses.use_default_colors()
+        curses.init_pair(1, 3, -1)   # accent: days with events, times
+        curses.init_pair(2, 8, -1)   # dim: weekday header, hints
+        curses.init_pair(3, 4, -1)   # today
+        curses.init_pair(4, 1, -1)   # warnings
+
+    def load(self, force=False):
+        key = (self.sel.year, self.sel.month)
+        if force or key != self.loaded:
+            self.events = month_events(*key)
+            self.loaded = key
+
+    # ---------- drawing ----------
+    def draw(self):
+        s = self.scr
+        s.erase()
+        h, w = s.getmaxyx()
+        x0 = max((w - 28) // 2, 0)  # grid is 7 days x 4 columns, centred
+        title = self.sel.strftime("%B %Y")
+        s.addstr(0, (w - len(title)) // 2, title, curses.A_BOLD)
+        s.addstr(0, x0, "‹", curses.color_pair(2))
+        s.addstr(0, x0 + 27, "›", curses.color_pair(2))
+
+        # weekday header + grid
+        for i, name in enumerate(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]):
+            s.addstr(2, x0 + i * 4, f"{name:>3}", curses.color_pair(2))
+        weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(self.sel.year, self.sel.month)
+        for r, week in enumerate(weeks):
+            for c, day in enumerate(week):
+                if day.month != self.sel.month:
+                    continue
+                attr = curses.A_NORMAL
+                if self.events.get(day):
+                    attr |= curses.color_pair(1) | curses.A_BOLD
+                if day == self.today:
+                    attr |= curses.color_pair(3) | curses.A_BOLD | curses.A_UNDERLINE
+                if day == self.sel:
+                    attr |= curses.A_REVERSE
+                s.addstr(3 + r, x0 + c * 4 + 1, f"{day.day:>2}", attr)
+
+        # selected day's events
+        y = 4 + len(weeks)
+        s.hline(y, 1, curses.ACS_HLINE, w - 2, curses.color_pair(2))
+        s.addstr(y + 1, 1, self.sel.strftime("%A, %d %B"), curses.A_BOLD)
+        evs = self.events.get(self.sel, [])
+        self.cursor = min(self.cursor, max(len(evs) - 1, 0))
+        if not evs:
+            s.addstr(y + 3, 1, "No events", curses.color_pair(2))
+        for i, ev in enumerate(evs[: h - y - 5]):
+            when = "all day" if ev.get("all-day") == "True" else f"{ev['start-time']}–{ev['end-time']}"
+            line = f" {ev['title']} {ev.get('repeat-symbol', '')}".rstrip()
+            # highlight only matters when there's a choice (tab cycles, e/d act on it)
+            attr = curses.A_REVERSE if i == self.cursor and len(evs) > 1 else curses.A_NORMAL
+            s.addstr(y + 3 + i, 1, f"{when:<12}", curses.color_pair(1) | attr)
+            s.addstr(y + 3 + i, 13, line[: w - 14].ljust(w - 14), attr)
+
+        hint = "n new · e edit · d del · t today"
+        s.addstr(h - 1, max((w - len(hint)) // 2, 0), hint[: w - 1], curses.color_pair(2))
+        s.refresh()
+
+    # ---------- actions ----------
+    def prompt(self, label):
+        h, w = self.scr.getmaxyx()
+        self.scr.move(h - 1, 0)
+        self.scr.clrtoeol()
+        self.scr.addstr(h - 1, 1, label, curses.A_BOLD)
+        curses.echo()
+        curses.curs_set(1)
+        try:
+            text = self.scr.getstr(h - 1, len(label) + 2, w - len(label) - 4).decode().strip()
+        except KeyboardInterrupt:
+            text = ""
+        curses.noecho()
+        curses.curs_set(0)
+        return text
+
+    def new_event(self):
+        title = self.prompt("Title:")
+        if not title:
+            return
+        when = self.prompt("Time (blank = all day, 18:00 or 18:00-19:30):")
+        args = ["new", self.sel.strftime(DATE_FMT)]
+        if when:
+            args += when.replace("–", "-").split("-", 1)
+        khal(*args, title)
+        self.load(force=True)
+
+    def selected_event(self):
+        evs = self.events.get(self.sel, [])
+        return evs[self.cursor] if evs else None
+
+    def delete_event(self):
+        ev = self.selected_event()
+        if not ev:
+            return
+        extra = " (all repeats)" if ev.get("repeat-symbol") else ""
+        if self.prompt(f"Delete '{ev['title']}'{extra}? y/N").lower() != "y":
+            return
+        f = event_file(ev["uid"])
+        if f:
+            f.unlink()
+        self.load(force=True)
+
+    def edit_event(self):
+        ev = self.selected_event()
+        if not ev:
+            return
+        curses.endwin()
+        subprocess.run(["khal", "edit", "--show-past", ev["title"]])
+        self.scr.refresh()
+        self.load(force=True)
+
+    def move(self, days=0, months=0):
+        d = self.sel
+        if months:
+            m = d.month - 1 + months
+            y, m = d.year + m // 12, m % 12 + 1
+            d = d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1]))
+        self.sel = d + dt.timedelta(days=days)
+        self.cursor = 0
+
+    def run(self):
+        keys = {
+            curses.KEY_LEFT: (-1, 0), ord("h"): (-1, 0),
+            curses.KEY_RIGHT: (1, 0), ord("l"): (1, 0),
+            curses.KEY_UP: (-7, 0), ord("k"): (-7, 0),
+            curses.KEY_DOWN: (7, 0), ord("j"): (7, 0),
+            ord("["): (0, -1), curses.KEY_PPAGE: (0, -1),
+            ord("]"): (0, 1), curses.KEY_NPAGE: (0, 1),
+        }
+        while True:
+            self.load()
+            self.draw()
+            k = self.scr.getch()
+            if k in (ord("q"), 27):
+                return
+            if k in keys:
+                self.move(*keys[k])
+            elif k == ord("t"):
+                self.sel, self.cursor = self.today, 0
+            elif k == ord("\t"):  # cycle events of the day
+                self.cursor = (self.cursor + 1) % max(len(self.events.get(self.sel, [])), 1)
+            elif k == ord("n"):
+                self.new_event()
+            elif k == ord("d"):
+                self.delete_event()
+            elif k == ord("e"):
+                self.edit_event()
+
+
+if __name__ == "__main__":
+    os.environ.setdefault("ESCDELAY", "25")
+    curses.wrapper(lambda scr: App(scr).run())
