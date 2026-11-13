@@ -1,0 +1,43 @@
+// Default layout: one-line zjstatus bar — tabs on the left, key hints for
+// the current mode on the right. Colours are the terminal's ANSI palette, so
+// they follow alacritty's (matugen) colours locally and over ssh alike.
+// zellij downloads + caches the plugin on first use (asks for permission once).
+layout {
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="https://github.com/dj95/zjstatus/releases/download/v0.25.0/zjstatus.wasm" {
+                format_left   " {tabs}"
+                format_right  "{mode}"
+                format_space  ""
+                format_hide_on_overlength "false"
+                format_precedence "lrc"
+
+                // frames only once a tab has more than one pane
+                hide_frame_for_single_pane "true"
+
+                tab_normal              "#[fg=bright_black] {index} {name} "
+                tab_normal_fullscreen   "#[fg=bright_black] {index} {name} 󰊓 "
+                tab_normal_sync         "#[fg=bright_black] {index} {name} 󰓦 "
+                tab_active              "#[fg=blue,bold] {index} {name} "
+                tab_active_fullscreen   "#[fg=blue,bold] {index} {name} 󰊓 "
+                tab_active_sync         "#[fg=blue,bold] {index} {name} 󰓦 "
+                tab_rename              "#[fg=green,bold] {index} {name} "
+                tab_separator           "#[fg=bright_black]·"
+
+                mode_locked       "#[fg=bright_black]#[fg=white,bold]alt n #[fg=bright_black,bold=false]pane  #[fg=white,bold]alt t #[fg=bright_black,bold=false]tab  #[fg=white,bold]alt hjkl #[fg=bright_black,bold=false]focus  #[fg=white,bold]alt q #[fg=bright_black,bold=false]close  #[fg=white,bold]alt z #[fg=bright_black,bold=false]zoom  #[fg=white,bold]alt w #[fg=bright_black,bold=false]float  #[fg=white,bold]alt s #[fg=bright_black,bold=false]scroll  #[fg=white,bold]ctrl g #[fg=bright_black,bold=false]more "
+                mode_normal       "#[fg=black,bg=yellow,bold] MENU #[bg=default] #[fg=white,bold]p #[fg=bright_black,bold=false]pane  #[fg=white,bold]t #[fg=bright_black,bold=false]tab  #[fg=white,bold]r #[fg=bright_black,bold=false]resize  #[fg=white,bold]m #[fg=bright_black,bold=false]move  #[fg=white,bold]s #[fg=bright_black,bold=false]scroll  #[fg=white,bold]o #[fg=bright_black,bold=false]session  #[fg=white,bold]q #[fg=bright_black,bold=false]quit  #[fg=white,bold]esc #[fg=bright_black,bold=false]back "
+                mode_pane         "#[fg=black,bg=blue,bold] PANE #[bg=default] #[fg=white,bold]hjkl #[fg=bright_black,bold=false]focus  #[fg=white,bold]n #[fg=bright_black,bold=false]new  #[fg=white,bold]r #[fg=bright_black,bold=false]right  #[fg=white,bold]d #[fg=bright_black,bold=false]down  #[fg=white,bold]s #[fg=bright_black,bold=false]stack  #[fg=white,bold]x #[fg=bright_black,bold=false]close  #[fg=white,bold]f #[fg=bright_black,bold=false]full  #[fg=white,bold]w #[fg=bright_black,bold=false]float  #[fg=white,bold]e #[fg=bright_black,bold=false]embed  #[fg=white,bold]c #[fg=bright_black,bold=false]rename "
+                mode_tab          "#[fg=black,bg=green,bold] TAB #[bg=default] #[fg=white,bold]hl #[fg=bright_black,bold=false]switch  #[fg=white,bold]n #[fg=bright_black,bold=false]new  #[fg=white,bold]x #[fg=bright_black,bold=false]close  #[fg=white,bold]r #[fg=bright_black,bold=false]rename  #[fg=white,bold]s #[fg=bright_black,bold=false]sync  #[fg=white,bold]b #[fg=bright_black,bold=false]break out  #[fg=white,bold][ ] #[fg=bright_black,bold=false]break ←→ "
+                mode_resize       "#[fg=black,bg=magenta,bold] RESIZE #[bg=default] #[fg=white,bold]hjkl #[fg=bright_black,bold=false]grow  #[fg=white,bold]HJKL #[fg=bright_black,bold=false]shrink  #[fg=white,bold]= - #[fg=bright_black,bold=false]all sides "
+                mode_move         "#[fg=black,bg=cyan,bold] MOVE #[bg=default] #[fg=white,bold]hjkl #[fg=bright_black,bold=false]move pane  #[fg=white,bold]n #[fg=bright_black,bold=false]next spot  #[fg=white,bold], . #[fg=bright_black,bold=false]move tab "
+                mode_scroll       "#[fg=black,bg=yellow,bold] SCROLL #[bg=default] #[fg=white,bold]jk #[fg=bright_black,bold=false]line  #[fg=white,bold]du #[fg=bright_black,bold=false]half page  #[fg=white,bold]g G #[fg=bright_black,bold=false]top/bottom  #[fg=white,bold]/ #[fg=bright_black,bold=false]search  #[fg=white,bold]e #[fg=bright_black,bold=false]editor "
+                mode_enter_search "#[fg=black,bg=yellow,bold] SEARCH #[bg=default] #[fg=white,bold]enter #[fg=bright_black,bold=false]find  #[fg=white,bold]esc #[fg=bright_black,bold=false]cancel "
+                mode_search       "#[fg=black,bg=yellow,bold] SEARCH #[bg=default] #[fg=white,bold]n N #[fg=bright_black,bold=false]next/prev  #[fg=white,bold]c #[fg=bright_black,bold=false]case  #[fg=white,bold]w #[fg=bright_black,bold=false]wrap  #[fg=white,bold]o #[fg=bright_black,bold=false]word  #[fg=white,bold]esc #[fg=bright_black,bold=false]done "
+                mode_rename_tab   "#[fg=black,bg=green,bold] RENAME #[bg=default] #[fg=white,bold]enter #[fg=bright_black,bold=false]save  #[fg=white,bold]esc #[fg=bright_black,bold=false]cancel "
+                mode_rename_pane  "#[fg=black,bg=blue,bold] RENAME #[bg=default] #[fg=white,bold]enter #[fg=bright_black,bold=false]save  #[fg=white,bold]esc #[fg=bright_black,bold=false]cancel "
+                mode_session      "#[fg=black,bg=red,bold] SESSION #[bg=default] #[fg=white,bold]d #[fg=bright_black,bold=false]detach  #[fg=white,bold]w #[fg=bright_black,bold=false]sessions  #[fg=white,bold]c #[fg=bright_black,bold=false]config  #[fg=white,bold]l #[fg=bright_black,bold=false]layouts "
+            }
+        }
+    }
+}

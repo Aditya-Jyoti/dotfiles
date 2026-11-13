@@ -17,7 +17,7 @@
 // Esc or Ctrl g goes back to locked.
 
 theme "dots"   // defined at the bottom; matugen overrides it on the laptop
-default_layout "compact"
+default_layout "default"
 default_mode "locked"
 
 pane_frames true

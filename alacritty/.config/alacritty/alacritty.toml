@@ -26,6 +26,17 @@ import = ["~/.cache/matugen/alacritty.toml"]
 TERM = "xterm-256color"
 
 [terminal]
+# Programs inside (zellij, nvim, also over ssh) copy with OSC 52; reading the
+# clipboard that way stays off
+osc52 = "OnlyCopy"
+
+# Every plain window opens a zellij session (alacritty -e … still runs just
+# that command). Closing the window ends the session instead of leaving it
+# running in the background — detach with Alt d first to keep one. Falls back
+# to the plain shell if zellij isn't installed.
+[terminal.shell]
+program = "/bin/sh"
+args = ["-c", "command -v zellij >/dev/null && exec zellij options --on-force-close quit --session-serialization false; exec \"$SHELL\""]
 
 [[keyboard.bindings]]
 key = "Return"
