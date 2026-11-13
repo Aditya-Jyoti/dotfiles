@@ -59,6 +59,10 @@ output_path = "~/.cache/matugen/generated.lua"
 input_path  = "~/.config/matugen/templates/yazi.toml"
 output_path = "~/.config/yazi/theme.toml"
 
+[templates.cava]
+input_path  = "~/.config/matugen/templates/cava.theme"
+output_path = "~/.config/cava/themes/matugen"
+
 [templates.btop]
 input_path  = "~/.config/matugen/templates/btop.theme"
 output_path = "~/.config/btop/themes/matugen.theme"

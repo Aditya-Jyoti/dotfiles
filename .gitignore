@@ -8,3 +8,7 @@ yazi/.config/yazi/theme.toml
 yazi/.config/yazi/plugins/
 # logs
 *.log
+cava/.config/cava/themes/matugen
+cava/.config/cava/shaders/
+cava/.config/cava/themes/solarized_dark
+cava/.config/cava/themes/tricolor

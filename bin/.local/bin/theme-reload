@@ -21,6 +21,9 @@ pgrep -x polybar >/dev/null && polybar-msg cmd restart >/dev/null 2>&1
 
 pgrep -x dunst >/dev/null && dunstctl reload
 
+# cava re-reads its config (and themes/matugen) on SIGUSR1
+pkill -USR1 -x cava
+
 # tmux (all sessions share the server)
 tmux source-file "$C/tmux.conf" >/dev/null 2>&1
 

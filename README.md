@@ -30,7 +30,7 @@ Add a theme by adding a `[name.dark]` + `[name.light]` block.
 
 Scripts live in `bin/.local/bin/` (on `$PATH`). Templates in `matugen/.config/matugen/templates/` → outputs mostly in `~/.cache/matugen/` (not tracked).
 
-Themed: polybar, rofi, dunst, bspwm borders, alacritty, tmux, nvim, yazi, btop, GTK 3/4, flameshot, VS Code, Firefox, Dark Reader.
+Themed: polybar, rofi, dunst, bspwm borders, alacritty, tmux, nvim, yazi, btop, cava, GTK 3/4, flameshot, VS Code, Firefox, Dark Reader.
 Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` theme to follow fully.
 
 ## Layout
@@ -46,6 +46,7 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 | `applications` | launcher entries (rofi `alt + space`), e.g. Calendar |
 | `wireplumber` | audio: headphones/speakers and monitor (HDMI/DP) available as outputs at the same time |
+| `cava` | audio visualizer; colours from matugen (`themes/matugen`), reloads live on wallpaper change |
 | `khal` `vdirsyncer` | calendar behind the polybar clock (click it); CalDAV setup steps are in the vdirsyncer config |
 
 ## Not tracked
