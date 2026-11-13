@@ -67,6 +67,13 @@ output_path = "~/.config/cava/themes/matugen"
 input_path  = "~/.config/matugen/templates/btop.theme"
 output_path = "~/.config/btop/themes/matugen.theme"
 
+# Overrides the "dots" fallback theme in zellij's config.kdl; touching the
+# config makes running sessions reload it
+[templates.zellij]
+input_path  = "~/.config/matugen/templates/zellij.kdl"
+output_path = "~/.config/zellij/themes/matugen.kdl"
+post_hook   = "touch ~/.config/zellij/config.kdl"
+
 # ---------- apps ----------
 [templates.vscode]
 input_path  = "~/.config/matugen/templates/vscode.json"

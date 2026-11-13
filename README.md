@@ -1,6 +1,6 @@
 # dotfiles
 
-bspwm · sxhkd · polybar · picom · rofi · dunst · alacritty · tmux · nvim — every colour generated from the wallpaper by **matugen**.
+bspwm · sxhkd · polybar · picom · rofi · dunst · alacritty · zellij · nvim — every colour generated from the wallpaper by **matugen**.
 
 ## Install
 
@@ -30,7 +30,7 @@ Add a theme by adding a `[name.dark]` + `[name.light]` block.
 
 Scripts live in `bin/.local/bin/` (on `$PATH`). Templates in `matugen/.config/matugen/templates/` → outputs mostly in `~/.cache/matugen/` (not tracked).
 
-Themed: polybar, rofi, dunst, bspwm borders, alacritty, tmux, nvim, yazi, btop, cava, GTK 3/4, flameshot, VS Code, Firefox, Dark Reader.
+Themed: polybar, rofi, dunst, bspwm borders, alacritty, zellij, tmux, nvim, yazi, btop, cava, GTK 3/4, flameshot, VS Code, Firefox, Dark Reader.
 Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` theme to follow fully.
 
 ## Layout
@@ -43,12 +43,28 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `picom` | glx, v13 animations, blur only behind translucent windows |
 | `matugen` | colour config + templates |
 | `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `lazygit-scratch`, `workspace-switcher`, `tmux-session-picker`, `save-session`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays`, `calendar-popup`, `calendar-tui` |
-| `alacritty` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
+| `alacritty` `zellij` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 | `applications` | launcher entries (rofi `alt + space`), e.g. Calendar |
 | `wireplumber` | audio: headphones/speakers and monitor (HDMI/DP) available as outputs at the same time |
 | `cava` | audio visualizer; colours from matugen (`themes/matugen`), reloads live on wallpaper change |
 | `wallpapers` | `~/.wallpapers` (picked with `super + w`) |
 | `khal` `vdirsyncer` | calendar behind the polybar clock (click it); CalDAV setup steps are in the vdirsyncer config |
+
+## Zellij (laptop + servers)
+
+One self-contained `config.kdl`: no prefix key, starts locked so nvim/shell
+keys pass through, gruvbox fallback theme built in (matugen overrides it on
+the laptop). Key cheat-sheet is at the top of the file.
+
+On a server:
+
+```sh
+git clone https://github.com/Aditya-Jyoti/dotfiles ~/dotfiles
+cd ~/dotfiles && stow -t ~ zellij        # or: ./install.sh zellij
+```
+
+Inside local zellij, sshing into a server running zellij asks whether to
+hand keys to the nested session (`nested_session_handling "ask"`).
 
 ## Not tracked
 Generated colour files, logs, yazi plugins (`ya pkg install` restores them), `.backup-*/`.
