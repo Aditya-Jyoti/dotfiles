@@ -47,6 +47,7 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `applications` | launcher entries (rofi `alt + space`), e.g. Calendar |
 | `wireplumber` | audio: headphones/speakers and monitor (HDMI/DP) available as outputs at the same time |
 | `cava` | audio visualizer; colours from matugen (`themes/matugen`), reloads live on wallpaper change |
+| `wallpapers` | `~/.wallpapers` (picked with `super + w`) |
 | `khal` `vdirsyncer` | calendar behind the polybar clock (click it); CalDAV setup steps are in the vdirsyncer config |
 
 ## Not tracked
