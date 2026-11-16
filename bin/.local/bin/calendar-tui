@@ -151,6 +151,20 @@ class App:
 
     # ---------- drawing ----------
     def draw(self):
+        # A too-small window (big font / HiDPI scaling) used to crash the
+        # popup instantly; say so instead and redraw once it's resized.
+        try:
+            self._draw()
+        except curses.error:
+            s = self.scr
+            s.erase()
+            try:
+                s.addstr(0, 0, "window too small"[: max(s.getmaxyx()[1] - 1, 0)])
+            except curses.error:
+                pass
+            s.refresh()
+
+    def _draw(self):
         s = self.scr
         s.erase()
         h, w = s.getmaxyx()

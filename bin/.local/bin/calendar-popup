@@ -15,7 +15,8 @@ read -r name mx my mw <<<"$({ bspc query -T -m pointed 2>/dev/null || bspc query
     jq -r '"\(.name) \(.rectangle.x) \(.rectangle.y) \(.rectangle.width)"')"
 
 # Just below the bar: offset-y + height + gap (see polybar config.ini)
-case $name in eDP*) bar=44 ;; *) bar=54 ;; esac
+# The laptop panel is HiDPI, so alacritty scales fonts up there (same sizes as `term`)
+case $name in eDP*) bar=44 font=7 ;; *) bar=54 font=10 ;; esac
 x=$(( mx + (mw - W) / 2 ))
 y=$(( my + bar ))
 bspc rule -a "$CLASS" -o state=floating sticky=on rectangle="${W}x${H}+${x}+${y}"
@@ -26,5 +27,5 @@ sync() {
         vdirsyncer sync >/dev/null 2>&1
 }
 sync &
-alacritty --class "$CLASS" --title Calendar -o font.size=10 -e calendar-tui
+alacritty --class "$CLASS" --title Calendar -o font.size="$font" -e calendar-tui
 sync
