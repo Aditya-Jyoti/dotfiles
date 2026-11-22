@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# music-mode [enter|next|prev|toggle|exit]
+#
+# super + m: a short "music mode" for spotatui. Until a few seconds pass
+# with no key pressed:  ← / a  previous   → / d  next   space  play/pause
+#                       esc / q / enter  leave now
+# A second sxhkd (music-mode.sxhkdrc) grabs those bare keys only while the
+# mode is on, so they reach your apps normally the rest of the time.
+#   MUSIC_MODE_SECONDS  how long the mode lasts after the last key (default 3)
+
+player=spotatui
+hold=${MUSIC_MODE_SECONDS:-3}
+state=${XDG_RUNTIME_DIR:-/tmp}/music-mode
+pidfile=$state/sxhkd.pid
+deadline=$state/deadline
+config=${XDG_CONFIG_HOME:-$HOME/.config}/sxhkd/music-mode.sxhkdrc
+nid=74621   # fixed notification id: each popup replaces the previous one
+
+mkdir -p "$state"
+
+now_ms()  { echo $(( ${EPOCHREALTIME/./} / 1000 )); }
+active()  { [[ -f $pidfile ]] && kill -0 "$(<"$pidfile")" 2>/dev/null; }
+bump()    { echo $(( $(now_ms) + hold * 1000 )) > "$deadline"; }
+
+popup() {   # $1 = what just happened
+    local track status
+    track=$(playerctl -p "$player" metadata --format '{{title}} — {{artist}}' 2>/dev/null)
+    status=$(playerctl -p "$player" status 2>/dev/null)
+    dunstify -a music-mode -u low -r "$nid" -t $(( hold * 1000 )) \
+        "♫ Music mode${1:+  ·  $1}" \
+        "${track:-nothing playing}${status:+ ($status)}
+<i>← a  prev    space  play/pause    d →  next    esc  exit</i>"
+}
+
+stop() {
+    active && kill "$(<"$pidfile")" 2>/dev/null
+    rm -f "$pidfile" "$deadline"
+    dunstify -C "$nid"
+}
+
+# runs in the background: ends the mode once the deadline passes
+watch() {
+    while active; do
+        (( $(now_ms) >= $(<"$deadline") )) 2>/dev/null && { stop; return; }
+        sleep 0.2
+    done
+}
+
+act() {     # $1 = playerctl command, $2 = label
+    active || exit 0
+    bump
+    playerctl -p "$player" "$1"
+    sleep 0.3   # give spotatui a moment to report the new track / state
+    popup "$2"
+}
+
+case ${1:-enter} in
+    enter)
+        if ! playerctl -l 2>/dev/null | grep -qx "$player"; then
+            dunstify -a music-mode -u low -r "$nid" "♫ spotatui isn't running" \
+                "open it with super + \\ or super + shift + m"
+            exit 0
+        fi
+        bump
+        if ! active; then
+            sxhkd -c "$config" >/dev/null 2>&1 &
+            echo $! > "$pidfile"
+            watch >/dev/null 2>&1 &
+            disown
+        fi
+        popup
+        ;;
+    next)   act next       "⏭ next" ;;
+    prev)   act previous   "⏮ previous" ;;
+    toggle) act play-pause "⏯" ;;
+    exit)   stop ;;
+    *)      sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+esac

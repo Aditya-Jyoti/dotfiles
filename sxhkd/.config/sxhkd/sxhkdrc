@@ -55,8 +55,13 @@ super + shift + backslash
     bspscratch move
 
 # Scratchpad apps: toggle their own window (they're always in the scratchpad)
-# (spotatui allows one copy: if it's already running in some other terminal, say so)
+# Music mode: for 3s after the last key, ←/a prev, →/d next, space play/pause,
+# esc leaves (see music-mode.sxhkdrc). spotatui itself: super + \ or super + shift + m
 super + m
+    music-mode
+
+# spotatui allows one copy: if it's already running in some other terminal, say so
+super + shift + m
     if pgrep -x spotatui >/dev/null && ! xdotool search --classname '^Spotatui$' >/dev/null; then \
         dunstify -a spotatui -u low "spotatui is already running" "in another terminal; quit it there first"; \
     else \

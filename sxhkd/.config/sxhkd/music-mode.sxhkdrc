@@ -1,0 +1,15 @@
+# Keys for music mode (super + m). Loaded by a temporary second sxhkd that
+# `music-mode` starts and stops, so these bare keys are only taken while the
+# mode is on. Don't load this file from the main sxhkd.
+
+{Right,d}
+    music-mode next
+
+{Left,a}
+    music-mode prev
+
+space
+    music-mode toggle
+
+{Escape,q,Return}
+    music-mode exit
