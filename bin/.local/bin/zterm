@@ -1,0 +1,17 @@
+#!/bin/sh
+# zterm — alacritty's shell: every window gets a throwaway zellij session.
+#
+#   Throwaway sessions are named tmp-…; once closed they're deleted (the next
+#   time a terminal opens), so the session list only holds sessions you meant
+#   to keep. To keep one: give it a real name —
+#       zkeep <name>            (renames the current session)
+#   or create a named one from the session manager (Alt o).
+#   Closing a window ends its session; Alt d detaches instead (keeps it running).
+
+command -v zellij >/dev/null || exec "${SHELL:-/bin/sh}"
+
+zellij list-sessions --no-formatting 2>/dev/null |
+    awk '/EXITED/ && $1 ~ /^tmp-/ { print $1 }' |
+    while read -r s; do zellij delete-session "$s" >/dev/null 2>&1; done
+
+exec zellij --session "tmp-$(date +%d%H%M%S)-$$" options --on-force-close quit
