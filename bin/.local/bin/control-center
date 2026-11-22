@@ -67,7 +67,7 @@ battery() {
 rows=()
 add() { # key label "icon|value"
     local icon=${3%%|*} value=${3#*|}
-    rows+=("$1"$'\t'"$(printf '%s   %-11s <span alpha="60%%">%s</span>' "$icon" "$2" "${value//&/&amp;}")")
+    rows+=("$1"$'\t'"$(printf '%s  %-10s <b>%s</b>' "$icon" "$2" "${value//&/&amp;}")")
 }
 add wifi       "Wi-Fi"      "$(wifi)"
 add bluetooth  "Bluetooth"  "$(bluetooth)"
@@ -79,9 +79,13 @@ add battery    "Battery"    "$(battery)"
 
 choice=$(printf '%s\n' "${rows[@]}" | cut -f2 |
     rofi -dmenu -i -markup-rows -format i -p "" \
-        -theme-str 'window { location: north east; anchor: north east; x-offset: -12px; y-offset: 48px; width: 400px; }' \
-        -theme-str 'listview { lines: 7; fixed-height: false; scrollbar: false; }' \
-        -theme-str 'inputbar { enabled: false; }') || exit 0
+        -theme-str '* { font: "FiraCode Nerd Font 13px"; }' \
+        -theme-str 'window { location: north east; anchor: north east; x-offset: -12px; y-offset: 48px; width: 360px; height: 0; }' \
+        -theme-str 'mainbox { padding: 8px; spacing: 0; children: [ listview ]; }' \
+        -theme-str 'listview { lines: 7; fixed-height: false; scrollbar: false; spacing: 2px; }' \
+        -theme-str 'element { padding: 5px 8px; }' \
+        -theme-str 'element normal.normal, element alternate.normal { background-color: transparent; text-color: @on-surface; }' \
+        -theme-str 'element selected.normal { background-color: @primary; text-color: @on-primary; }') || exit 0
 
 # ---------- actions ----------
 float_term() { # run a TUI in a floating terminal
