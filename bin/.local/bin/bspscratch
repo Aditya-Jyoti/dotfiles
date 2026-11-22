@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# bspscratch — i3-style scratchpad for bspwm (after ayan7744/bspscratchpad).
+#
+#   bspscratch move    focused window into the scratchpad (floating, sticky,
+#                      hidden) — or, if it's already there, back to a normal
+#                      tiled window                               super + shift + \
+#   bspscratch cycle   show the next scratchpad window on this workspace;
+#                      if a scratchpad window is focused, hide it   super + \
+#
+# Members: windows you moved in, plus the dedicated scratchpad apps (classes
+# in DEFAULT_CLASSES: the yazi explorer and spotatui), which always belong.
+# State lives in $XDG_RUNTIME_DIR, so it's cleared on logout.
+
+DEFAULT_CLASSES='^(Explorer|Spotatui)$'
+STATE=${XDG_RUNTIME_DIR:-/tmp}/bspscratch
+IDS=$STATE/ids COUNTER=$STATE/counter
+mkdir -p "$STATE"; touch "$IDS"
+
+dec() { printf '%d\n' "$1"; }                       # 0x… (bspc) → decimal (xdotool)
+alive() { bspc query -N -n "$1" >/dev/null 2>&1; }
+
+# Drop windows that were closed since
+prune() {
+    local id kept=()
+    while read -r id; do [[ -n $id ]] && alive "$id" && kept+=("$id"); done <"$IDS"
+    printf '%s\n' "${kept[@]}" | sed '/^$/d' >"$IDS"
+}
+
+members() {
+    { cat "$IDS"; xdotool search --classname "$DEFAULT_CLASSES" 2>/dev/null; } |
+        while read -r id; do [[ -n $id ]] && dec "$id"; done | awk '!seen[$0]++'
+}
+
+is_member() { members | grep -qx "$(dec "$1")"; }
+
+show() {
+    bspc node "$1" --to-monitor focused --flag hidden=off --flag sticky=on --state floating --layer above
+    bspc node "$1" --focus
+}
+
+case $1 in
+    move)
+        prune
+        f=$(bspc query -N -n focused) || exit 0
+        if grep -qx "$(dec "$f")" "$IDS"; then
+            grep -vx "$(dec "$f")" "$IDS" >"$IDS.tmp"; mv "$IDS.tmp" "$IDS"
+            bspc node "$f" --flag sticky=off --layer normal --state tiled
+        else
+            dec "$f" >>"$IDS"
+            bspc node "$f" --state floating --flag sticky=on --layer above --flag hidden=on
+        fi
+        ;;
+    cycle)
+        prune
+        f=$(bspc query -N -n focused 2>/dev/null)
+        if [[ -n $f ]] && is_member "$f"; then
+            bspc node "$f" --flag hidden=on
+            exit 0
+        fi
+        mapfile -t list < <(members)
+        (( ${#list[@]} )) || { dunstify -a scratchpad -u low "Scratchpad is empty" "super + shift + \\ moves a window in"; exit 0; }
+        n=$(cat "$COUNTER" 2>/dev/null || echo 0)
+        id=${list[n % ${#list[@]}]}
+        echo $(( (n + 1) % ${#list[@]} )) >"$COUNTER"
+        show "$(printf '0x%08X' "$id")"
+        ;;
+    *)
+        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+esac

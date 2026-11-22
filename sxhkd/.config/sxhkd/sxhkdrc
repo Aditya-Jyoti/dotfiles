@@ -45,13 +45,22 @@ super + alt + w
 super + a
     control-center
 
-# Scratchpad: floating zellij session above everything, on any workspace
+# Scratchpad (i3-style): any window can live there, floating above everything
+# on every workspace. super + \ shows the next one / hides the focused one,
+# super + shift + \ moves the focused window in (or back out to tiled)
 super + backslash
-    scratch
+    bspscratch cycle
 
-# File explorer: yazi in the scratchpad (focuses it if already open there)
+super + shift + backslash
+    bspscratch move
+
+# Scratchpad apps: toggle their own window (they're always in the scratchpad)
+super + m
+    scratchpad Spotatui 'term --class Spotatui --title spotatui -e spotatui'
+
+# File explorer: yazi, a scratchpad app
 super + e
-    scratch open yazi
+    scratchpad Explorer 'term --class Explorer --title Explorer -e yazi'
 
 super + n 
     scratchpad notes.omrin.in "brave --app=https://notes.omrin.in --class=AffineScratchpad"

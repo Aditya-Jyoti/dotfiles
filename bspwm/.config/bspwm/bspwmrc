@@ -60,6 +60,9 @@ bspc config focus_follows_pointer true
 ### Rules
 ### ===============================
 
+# Scratchpad apps (bspscratch / scratchpad): float above everything, on every workspace
+bspc rule -a 'Explorer'  state=floating sticky=on layer=above center=on rectangle=1200x750+0+0
+bspc rule -a 'Spotatui'  state=floating sticky=on layer=above center=on rectangle=1100x650+0+0
 bspc rule -a 'AffineScratchpad:notes.omrin.in'  state=floating sticky=on rectangle=1200x750+360+165
 bspc rule -a 'Pavucontrol'                      state=floating
 bspc rule -a 'Blueman-manager'                  state=floating

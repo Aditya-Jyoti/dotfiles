@@ -42,7 +42,7 @@ Needs restart to pick up: btop, Firefox, GTK apps. GTK3 needs the `adw-gtk3` the
 | `polybar` | `launch.sh` picks `bar/laptop` (compact) or `bar/monitor` (roomy) per output |
 | `picom` | glx, v13 animations, blur only behind translucent windows |
 | `matugen` | colour config + templates |
-| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `scratch`, `control-center`, `workspace-switcher`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays`, `calendar-popup`, `calendar-tui` |
+| `bin` | scripts → `~/.local/bin`: `setwall`, `matugen-theme`, `theme-reload`, `screenlock`, `shot`, `term`, `scratchpad`, `bspscratch`, `control-center`, `workspace-switcher`, `volume-control`, `brightness-control`, `rofi-calculator`, `clipboard`, `displays`, `calendar-popup`, `calendar-tui` |
 | `alacritty` `zellij` `tmux` `nvim` `rofi` `dunst` `yazi` `btop` `flameshot` `lazygit` `git` `greenclip` | app configs |
 | `applications` | launcher entries (rofi `alt + space`), e.g. Calendar |
 | `wireplumber` | audio: headphones/speakers and monitor (HDMI/DP) available as outputs at the same time |
