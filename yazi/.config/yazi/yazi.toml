@@ -1,0 +1,12 @@
+# Previews: alacritty has no image protocol, so on X11 yazi draws images with
+# ueberzugpp (an overlay window). PDFs (pdftoppm), videos (ffmpeg), SVG (resvg),
+# HEIC/fonts (imagemagick) and archives (7z) all go through that same path.
+
+[preview]
+# Cached thumbnails are rendered at most this big; small = fast + light on RAM
+max_width     = 800
+max_height    = 1000
+image_filter  = "triangle"   # quick, sharp enough at preview size
+image_quality = 75
+# wait a moment before drawing so scrolling fast through images stays smooth
+image_delay   = 30
