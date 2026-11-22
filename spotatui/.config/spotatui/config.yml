@@ -1,7 +1,175 @@
-# spotatui — Spotify TUI (lives in the scratchpad: super + \)
-# The "Terminal (ANSI)" preset draws with the terminal's 16 colours, which
-# alacritty gets from matugen — so spotatui follows the wallpaper live,
-# without restarting. Edit while spotatui is closed (it rewrites this file
-# when you save from its in-app settings, Alt+,).
+keybindings:
+  back: q
+  move_up: k
+  move_down: j
+  move_left: h
+  move_right: l
+  next_page: ctrl-d
+  previous_page: ctrl-u
+  jump_to_start: ctrl-a
+  jump_to_end: ctrl-e
+  jump_to_album: a
+  dj_open: ctrl-j
+  dj_toggle_auto_queue: ctrl-t
+  dj_vibe_shift: ctrl-y
+  dj_toggle_fresh_only: ctrl-o
+  dj_pick_model: ctrl-b
+  jump_to_artist_album: A
+  jump_to_context: o
+  manage_devices: d
+  decrease_volume: '-'
+  increase_volume: +
+  toggle_playback: space
+  seek_backwards: <
+  seek_forwards: '>'
+  next_track: n
+  previous_track: p
+  force_previous_track: P
+  help: '?'
+  shuffle: ctrl-s
+  repeat: ctrl-r
+  search: /
+  submit: enter
+  copy_song_url: c
+  copy_album_url: C
+  audio_analysis: v
+  lyrics_view: B
+  miniplayer_view: T
+  cover_art_view: G
+  add_item_to_queue: z
+  show_queue: Q
+  remove_from_queue: x
+  open_settings: f2
+  save_settings: f3
+  listening_party: ctrl-p
+  like_track: F
+  generate_recap: R
+  detach_pane: alt-D
+  close_pane: alt-x
+  focus_pane_left: alt-h
+  focus_pane_down: alt-j
+  focus_pane_up: alt-k
+  focus_pane_right: alt-l
+  move_pane_left: alt-H
+  move_pane_down: alt-J
+  move_pane_up: alt-K
+  move_pane_right: alt-L
+  rotate_pane: alt-R
+  grow_pane: alt-=
+  shrink_pane: alt--
+  reset_panes: alt-0
+behavior:
+  language: auto
+  seek_milliseconds: 5000
+  volume_increment: 10
+  tick_rate_milliseconds: 250
+  animation_tick_rate_milliseconds: 16
+  enable_text_emphasis: true
+  banner_gradient: false
+  show_loading_indicator: true
+  enforce_wide_search_bar: false
+  group_folders_first: false
+  enable_global_song_count: false
+  disable_mouse_inputs: false
+  enable_discord_rpc: true
+  discord_rpc_client_id: null
+  enable_announcements: true
+  enable_lyrics: true
+  announcement_feed_url: null
+  enable_monthly_recap_prompt: true
+  pin_community_playlist: true
+  liked_icon: ♥
+  shuffle_icon: 🔀
+  repeat_track_icon: 🔂
+  repeat_context_icon: 🔁
+  playing_icon: ▶
+  paused_icon: ⏸
+  set_window_title: true
+  visualizer_style: Cava
+  player_bar_visualizer: spectrum
+  relay_server_url: wss://spotatui-party.spotatui.workers.dev/ws
+  stop_after_current_track: false
+  startup_behavior: continue
+  disable_auto_update: false
+  auto_update_delay: '0'
+  draw_cover_art: true
+  draw_cover_art_forced: false
+  playbar_cover_art_size_percent: 100
+  cover_art_theme: false
+  cover_art_dither: false
+  cover_art_dither_algorithm: stucki
+  cover_art_dither_pixel_scale: 1
+  mcp_enabled: false
+  dj_backend: agent_cli
+  dj_agent_command:
+  - claude
+  - -p
+  dj_agent_prompt_via: null
+  dj_agent_timeout_secs: 90
+  dj_agent_model: null
+  dj_model: null
+  dj_base_url: null
+  dj_api_key: null
+  dj_batch_size: 6
+  dj_history_period: 30d
+  dj_avoid_library: false
+  dj_configured: null
+  keepawake_enabled: true
+  enable_media_keys: true
+  enable_streaming: true
+  streaming_device_name: spotatui
+  streaming_bitrate: 320
+  streaming_audio_cache: false
+  streaming_autoplay: true
+  sync_token: null
+  local_music_path: null
+  subsonic_url: null
+  subsonic_username: null
+  subsonic_password: null
+  ytdlp_path: null
+  playback_engine: librespot
+  soloist_path: /home/aditya/.local/state/spotatui/soloist-bin/1795342485/soloist
+  soloist_audio_quality: lossless
+  qobuz_quality: 6
+  gauge_filled_icon: ⣿
+  gauge_unfilled_icon: ⣉
+  active_source_icon: ●
+  episode_played_icon: ✔
+  sort_ascending_icon: ↑
+  sort_descending_icon: ↓
+  list_highlight_icon: ▶
+  playbar_control_labels: null
+  status_message_ttl_percent: 100
+  playback_poll_seconds: 5
+  table_scroll_padding: 5
+  like_animation_frames: 10
+  startup_route: home
+  default_sort_playlist_tracks: default
+  default_sort_saved_albums: default
+  default_sort_saved_artists: default
+  default_sort_recently_played: default
+  sidebar_position: left
+  playbar_position: bottom
+  small_terminal_width: 150
+  small_terminal_height: 45
 theme:
-  preset: "Terminal (ANSI)"
+  preset: Terminal (ANSI)
+  active: 0, 180, 180
+  banner: 0, 200, 200
+  error_border: 200, 0, 0
+  error_text: 255, 100, 100
+  hint: 200, 200, 0
+  hovered: 180, 0, 180
+  inactive: 128, 128, 128
+  playbar_background: Reset
+  playbar_progress: 0, 200, 200
+  playbar_progress_text: 255, 255, 255
+  playbar_text: Reset
+  selected: 0, 200, 200
+  text: Reset
+  background: Reset
+  header: Reset
+  highlighted_lyrics: 0, 200, 200
+plugin_commands: null
+format: null
+tables: null
