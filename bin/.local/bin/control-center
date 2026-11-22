@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# control-center — status popout under the bar (super + a, or click the battery).
+# Wi-Fi, Bluetooth, volume, brightness, CPU, memory and battery in one rofi list;
+# Enter on a row opens the matching tool. Colours come from the matugen rofi theme.
+
+# ---------- gather (all from /sys, /proc and quick CLIs: ~0.3s) ----------
+wifi() {
+    local iface ssid sig
+    iface=$(ip route | awk '/default/ { print $5; exit }')
+    [[ -z $iface ]] && { echo "󰤭|offline"; return; }
+    if ! iw dev "$iface" info &>/dev/null; then
+        echo "󰈀|wired · $iface"; return
+    fi
+    ssid=$(iw dev "$iface" link | awk -F': ' '/SSID/ { print $2 }')
+    sig=$(iw dev "$iface" link | awk '/signal/ { print $2 }')
+    [[ -z $ssid ]] && { echo "󰤭|disconnected"; return; }
+    # dBm → rough %: -30 = 100, -90 = 0
+    local pct=$(( (sig + 90) * 100 / 60 )); (( pct > 100 )) && pct=100; (( pct < 0 )) && pct=0
+    echo "󰤨|$ssid · $pct%"
+}
+
+bluetooth() {
+    [[ $(bluetoothctl show 2>/dev/null | awk '/Powered/ { print $2 }') == yes ]] || { echo "󰂲|off"; return; }
+    local devs
+    devs=$(bluetoothctl devices Connected 2>/dev/null | cut -d' ' -f3- | paste -sd, | sed 's/,/, /g')
+    [[ -n $devs ]] && echo "󰂱|$devs" || echo "󰂯|on · nothing connected"
+}
+
+volume() {
+    local v
+    v=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
+    [[ $v == *MUTED* ]] && { echo "󰖁|muted"; return; }
+    awk '{ printf "󰕾|%d%%\n", $2 * 100 + 0.5 }' <<<"$v"
+}
+
+brightness() {
+    echo "󰃠|$(brightnessctl -m 2>/dev/null | cut -d, -f4)"
+}
+
+cpu() {
+    # busy % over 0.2s from /proc/stat, plus package temperature
+    local a b
+    read -ra a < <(head -1 /proc/stat); sleep 0.2; read -ra b < <(head -1 /proc/stat)
+    local idle=$(( (b[4] + b[5]) - (a[4] + a[5]) )) total=0 i
+    for i in 1 2 3 4 5 6 7 8; do total=$(( total + b[i] - a[i] )); done
+    local temp=$(( $(cat /sys/class/thermal/thermal_zone8/temp 2>/dev/null || echo 0) / 1000 ))
+    echo "󰍛|$(( total ? (total - idle) * 100 / total : 0 ))% · ${temp}°C"
+}
+
+memory() {
+    awk '/MemTotal/ { t = $2 } /MemAvailable/ { a = $2 }
+         END { printf "󰘚|%d%% · %.1f / %.1f GiB\n", (t - a) * 100 / t, (t - a) / 1048576, t / 1048576 }' /proc/meminfo
+}
+
+battery() {
+    local B=/sys/class/power_supply/BAT1 cap st w
+    cap=$(cat $B/capacity); st=$(cat $B/status)
+    w=$(awk '{ printf "%.1f", $1 / 1e6 }' $B/power_now 2>/dev/null)
+    case $st in
+        Charging)    echo "󰂄|$cap% · charging +${w}W" ;;
+        Discharging) echo "󰁹|$cap% · ${w}W" ;;
+        *)           echo "󰚥|$cap% · on AC" ;;
+    esac
+}
+
+# ---------- build rows: "icon  Label  value" ----------
+rows=()
+add() { # key label "icon|value"
+    local icon=${3%%|*} value=${3#*|}
+    rows+=("$1"$'\t'"$(printf '%s   %-11s <span alpha="60%%">%s</span>' "$icon" "$2" "${value//&/&amp;}")")
+}
+add wifi       "Wi-Fi"      "$(wifi)"
+add bluetooth  "Bluetooth"  "$(bluetooth)"
+add volume     "Volume"     "$(volume)"
+add brightness "Brightness" "$(brightness)"
+add cpu        "CPU"        "$(cpu)"
+add memory     "Memory"     "$(memory)"
+add battery    "Battery"    "$(battery)"
+
+choice=$(printf '%s\n' "${rows[@]}" | cut -f2 |
+    rofi -dmenu -i -markup-rows -format i -p "" \
+        -theme-str 'window { location: north east; anchor: north east; x-offset: -12px; y-offset: 48px; width: 400px; }' \
+        -theme-str 'listview { lines: 7; fixed-height: false; scrollbar: false; }' \
+        -theme-str 'inputbar { enabled: false; }') || exit 0
+
+# ---------- actions ----------
+float_term() { # run a TUI in a floating terminal
+    bspc rule -a ControlCenterTUI -o state=floating center=on rectangle=900x600+0+0
+    setsid -f term --class ControlCenterTUI -e "$@" >/dev/null 2>&1
+}
+case ${rows[choice]%%$'\t'*} in
+    wifi)        float_term nmtui ;;
+    bluetooth)   setsid -f blueman-manager >/dev/null 2>&1 ;;
+    volume)      setsid -f pavucontrol >/dev/null 2>&1 ;;
+    cpu|memory)  float_term btop ;;
+    brightness|battery) exec "$0" ;;   # nothing to open; just refresh
+esac

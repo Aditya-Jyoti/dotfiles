@@ -44,6 +44,10 @@ super + alt + w
 # SCRATCHPADS / APPLICATIONS
 #################################################
 
+# Control center: Wi-Fi, Bluetooth, volume, CPU, RAM, battery popout
+super + a
+    control-center
+
 # Scratchpad: floating zellij session above everything, on any workspace
 super + backslash
     scratch
