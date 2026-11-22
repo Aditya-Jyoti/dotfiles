@@ -10,7 +10,8 @@
 #   bspscratch sync    drop that blur if no scratchpad window is visible
 #
 # Members: windows you moved in, plus the dedicated scratchpad apps (classes
-# in DEFAULT_CLASSES: the yazi explorer and spotatui), which always belong.
+# in DEFAULT_CLASSES: the yazi explorer and spotatui), which always belong;
+# `toggle` starts whichever of those two isn't running (hidden) before showing.
 # State lives in $XDG_RUNTIME_DIR, so it's cleared on logout.
 
 DEFAULT_CLASSES='^(Explorer|Spotatui)$'
@@ -61,6 +62,32 @@ dim_sync() {
     dim_off
 }
 
+# Start the dedicated scratchpad apps that aren't running (e.g. after a
+# reboot), hidden via a one-shot rule, and wait until bspwm manages them, so
+# `toggle` lays them out with the rest instead of them popping up on their own.
+ensure_defaults() {
+    local class id started=()
+    local -A cmd=(
+        [Explorer]='term --class Explorer --title Explorer -e yazi'
+        [Spotatui]='term --class Spotatui --title spotatui -e spotatui'
+    )
+    for class in Explorer Spotatui; do
+        xdotool search --classname "^$class\$" >/dev/null 2>&1 && continue
+        # spotatui allows one copy: skip it if it runs in some other terminal
+        [[ $class == Spotatui ]] && pgrep -x spotatui >/dev/null && continue
+        bspc rule -a "$class" -o hidden=on
+        setsid -f sh -c "${cmd[$class]}" >/dev/null 2>&1
+        started+=("$class")
+    done
+    for class in "${started[@]}"; do
+        for _ in $(seq 60); do   # up to 3s
+            id=$(xdotool search --classname "^$class\$" 2>/dev/null | head -1)
+            [[ -n $id ]] && bspc query -N -n "$(printf '0x%08X' "$id")" >/dev/null 2>&1 && break
+            sleep 0.05
+        done
+    done
+}
+
 show() {
     bspc node "$1" --to-monitor focused --flag hidden=off --flag sticky=on --state floating --layer above
     bspc node "$1" --focus
@@ -80,13 +107,18 @@ case $1 in
         ;;
     toggle)
         prune
-        mapfile -t list < <(members)
-        (( ${#list[@]} )) || { dunstify -a scratchpad -u low "Scratchpad is empty" "super + shift + \\ moves a window in"; exit 0; }
         hex() { printf '0x%08X' "$1"; }
+        mapfile -t list < <(members)
         visible=0
         for id in "${list[@]}"; do
             [[ -z $(bspc query -N -n "$(hex "$id").hidden" 2>/dev/null) ]] && visible=1
         done
+        # about to show: make sure the explorer and spotatui exist first
+        if (( ! visible )); then
+            ensure_defaults
+            mapfile -t list < <(members)
+        fi
+        (( ${#list[@]} )) || { dunstify -a scratchpad -u low "Scratchpad is empty" "super + shift + \\ moves a window in"; exit 0; }
         if (( visible )); then
             for id in "${list[@]}"; do bspc node "$(hex "$id")" --flag hidden=on; done
             dim_off
