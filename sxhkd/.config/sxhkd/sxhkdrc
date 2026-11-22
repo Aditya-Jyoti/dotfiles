@@ -20,9 +20,6 @@ super + c
 super + p
     rofi-calculator
 
-super + t
-    tmux-session-picker
-
 # Wallpaper picker -> regenerates matugen colours everywhere
 super + w
     setwall
