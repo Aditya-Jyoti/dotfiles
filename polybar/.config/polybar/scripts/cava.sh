@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Tiny cava visualizer for polybar (tail = true): a thin dotted wave drawn
 # with braille dots (one dot per bar, two bars per character, 4 heights).
-# Prints nothing while no
-# audio plays, so the module disappears; cava's sleep_timer stops it from
+# Shows a flat dotted line while no
+# audio plays; cava's sleep_timer stops it from
 # doing any work during silence. Own config — your ~/.config/cava is untouched.
 
 CHARS=${1:-14}          # width in characters
@@ -30,9 +30,10 @@ noise_reduction = 77
 CFG
 
 # Each frame "0;3;1;…;" → braille: bar height 0..3 picks the dot row
-# (bottom → top), left/right column for even/odd bars. Silence → empty line.
-cava -p "$cfg" | LC_ALL=C.UTF-8 gawk -F';' '
-BEGIN { split("64 4 2 1", L, " "); split("128 32 16 8", R, " ") }  # bit per row, bottom→top
+# (bottom → top), left/right column for even/odd bars. Silence → flat line.
+cava -p "$cfg" | LC_ALL=C.UTF-8 gawk -F';' -v n="$CHARS" '
+BEGIN { split("64 4 2 1", L, " "); split("128 32 16 8", R, " ")  # bit per row, bottom→top
+        for (i = 0; i < n; i++) flat = flat sprintf("%c", 10240 + 64 + 128) }   # ⣀⣀⣀ = silence
 {
     out = ""; loud = 0
     for (i = 1; i < NF; i += 2) {
@@ -40,5 +41,5 @@ BEGIN { split("64 4 2 1", L, " "); split("128 32 16 8", R, " ") }  # bit per row
         loud += a + b
         out = out sprintf("%c", 10240 + L[a + 1] + R[b + 1])
     }
-    print (loud ? out : ""); fflush()
+    print (loud ? out : flat); fflush()
 }'
