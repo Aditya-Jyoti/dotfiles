@@ -6,6 +6,8 @@
 #                      tiled window                               super + shift + \
 #   bspscratch toggle  show every scratchpad window on this workspace, or
 #                      hide them all if any is showing             super + \
+#                      (the rest of the screen is blurred while they're up)
+#   bspscratch sync    drop that blur if no scratchpad window is visible
 #
 # Members: windows you moved in, plus the dedicated scratchpad apps (classes
 # in DEFAULT_CLASSES: the yazi explorer and spotatui), which always belong.
@@ -32,6 +34,32 @@ members() {
 }
 
 is_member() { members | grep -qx "$(dec "$1")"; }
+
+# Backdrop: a full-monitor, see-through window just under the scratchpad
+# windows; picom blurs whatever is behind it (rule for class ScratchDim in
+# picom.conf), so the rest of the desktop goes soft while the scratchpad is up.
+dim_on() {
+    local mx my mw mh img=$STATE/dim.png
+    dim_off
+    [[ -f $img ]] || magick -size 8x8 xc:black "$img"
+    read -r mx my mw mh < <(bspc query -T -m focused |
+        jq -r '.rectangle | "\(.x) \(.y) \(.width) \(.height)"')
+    bspc rule -a ScratchDim -o state=floating sticky=on layer=normal focus=off border=off \
+        rectangle="${mw}x${mh}+${mx}+${my}"
+    setsid -f feh --class ScratchDim --title ScratchDim --borderless --no-menus \
+        --zoom fill --geometry "${mw}x${mh}+${mx}+${my}" "$img" >/dev/null 2>&1
+}
+dim_off() { pkill -f 'feh --class ScratchDim' 2>/dev/null; }
+
+# Drop the backdrop once no scratchpad window is visible any more
+# (e.g. after hiding them one by one with super + e / super + m)
+dim_sync() {
+    local id
+    for id in $(members); do
+        [[ -z $(bspc query -N -n "$(printf '0x%08X' "$id").hidden" 2>/dev/null) ]] && return
+    done
+    dim_off
+}
 
 show() {
     bspc node "$1" --to-monitor focused --flag hidden=off --flag sticky=on --state floating --layer above
@@ -62,12 +90,14 @@ case $1 in
         for id in "${list[@]}"; do
             if (( visible )); then
                 bspc node "$(hex "$id")" --flag hidden=on
+                dim_off
             else
                 bspc node "$(hex "$id")" --to-monitor focused --flag hidden=off \
                     --flag sticky=on --state floating --layer above
             fi
         done
         (( visible )) && exit 0
+        dim_on
         # lay them out side by side (grid, max 3 per row) over 90% x 80% of
         # the monitor, so they don't all stack in the centre
         read -r mx my mw mh < <(bspc query -T -m focused |
@@ -85,7 +115,10 @@ case $1 in
         # focus the last one shown so the keyboard lands somewhere useful
         bspc node "$(hex "${list[-1]}")" --focus
         ;;
+    sync)
+        dim_sync
+        ;;
     *)
-        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
         ;;
 esac

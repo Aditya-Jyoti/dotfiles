@@ -30,3 +30,6 @@ fi
 for id in "${ids[@]}"; do
     bspc node "$id" --flag hidden --to-monitor focused --focus --flag sticky=on --state floating
 done
+
+# drop the scratchpad blur backdrop if this hid the last visible one
+command -v bspscratch >/dev/null && bspscratch sync
