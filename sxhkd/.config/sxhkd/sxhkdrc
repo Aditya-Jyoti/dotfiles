@@ -56,9 +56,6 @@ super + e
 super + n 
     scratchpad notes.omrin.in "brave --app=https://notes.omrin.in --class=AffineScratchpad"
 
-super + g 
-    lazygit-scratch
-
 super + l 
     workspace-switcher
 

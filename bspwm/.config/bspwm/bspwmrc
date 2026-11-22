@@ -60,7 +60,6 @@ bspc config focus_follows_pointer true
 ### Rules
 ### ===============================
 
-bspc rule -a 'Alacritty:lazygit-scratch'        state=floating sticky=on rectangle=1200x750+360+165
 bspc rule -a 'AffineScratchpad:notes.omrin.in'  state=floating sticky=on rectangle=1200x750+360+165
 bspc rule -a 'Pavucontrol'                      state=floating
 bspc rule -a 'Blueman-manager'                  state=floating
