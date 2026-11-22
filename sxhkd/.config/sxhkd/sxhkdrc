@@ -55,8 +55,13 @@ super + shift + backslash
     bspscratch move
 
 # Scratchpad apps: toggle their own window (they're always in the scratchpad)
+# (spotatui allows one copy: if it's already running in some other terminal, say so)
 super + m
-    scratchpad Spotatui 'term --class Spotatui --title spotatui -e spotatui'
+    if pgrep -x spotatui >/dev/null && ! xdotool search --classname '^Spotatui$' >/dev/null; then \
+        dunstify -a spotatui -u low "spotatui is already running" "in another terminal; quit it there first"; \
+    else \
+        scratchpad Spotatui 'term --class Spotatui --title spotatui -e spotatui'; \
+    fi
 
 # File explorer: yazi, a scratchpad app
 super + e
