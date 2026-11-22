@@ -127,7 +127,7 @@ behavior:
   subsonic_username: null
   subsonic_password: null
   ytdlp_path: null
-  playback_engine: librespot
+  playback_engine: soloist
   soloist_path: /home/aditya/.local/state/spotatui/soloist-bin/1795342485/soloist
   soloist_audio_quality: lossless
   qobuz_quality: 6
