@@ -1,6 +1,0 @@
-#!/bin/sh
-# zkeep <name> — keep the current zellij session: rename it from tmp-… to
-# <name>, so zterm won't clean it up and it can be resurrected from Alt o.
-[ -n "$ZELLIJ" ] || { echo "zkeep: not inside zellij" >&2; exit 1; }
-[ -n "$1" ] || { echo "usage: zkeep <name>" >&2; exit 2; }
-zellij action rename-session "$1" && echo "kept as '$1'"

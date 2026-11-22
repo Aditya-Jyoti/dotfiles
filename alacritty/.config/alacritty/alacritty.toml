@@ -30,12 +30,12 @@ TERM = "xterm-256color"
 # clipboard that way stays off
 osc52 = "OnlyCopy"
 
-# Every plain window opens a throwaway zellij session via `zterm` (see that
-# script: tmp-* sessions are deleted once closed; `zkeep <name>` keeps one).
-# alacritty -e … still runs just that command. Plain shell if zterm is missing.
+# Every plain window opens its own zellij session (alacritty -e … still runs
+# just that command). Nothing is saved: closing the window ends the session.
+# Detach with Alt d first to keep one running. Plain shell if zellij is missing.
 [terminal.shell]
 program = "/bin/sh"
-args = ["-c", "command -v zterm >/dev/null && exec zterm; exec \"$SHELL\""]
+args = ["-c", "command -v zellij >/dev/null && exec zellij options --on-force-close quit --session-serialization false; exec \"$SHELL\""]
 
 [[keyboard.bindings]]
 key = "Return"
