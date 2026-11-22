@@ -46,10 +46,10 @@ super + a
     control-center
 
 # Scratchpad (i3-style): any window can live there, floating above everything
-# on every workspace. super + \ shows the next one / hides the focused one,
+# on every workspace. super + \ shows all of them at once / hides them all,
 # super + shift + \ moves the focused window in (or back out to tiled)
 super + backslash
-    bspscratch cycle
+    bspscratch toggle
 
 super + shift + backslash
     bspscratch move

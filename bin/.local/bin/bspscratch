@@ -4,8 +4,8 @@
 #   bspscratch move    focused window into the scratchpad (floating, sticky,
 #                      hidden) — or, if it's already there, back to a normal
 #                      tiled window                               super + shift + \
-#   bspscratch cycle   show the next scratchpad window on this workspace;
-#                      if a scratchpad window is focused, hide it   super + \
+#   bspscratch toggle  show every scratchpad window on this workspace, or
+#                      hide them all if any is showing             super + \
 #
 # Members: windows you moved in, plus the dedicated scratchpad apps (classes
 # in DEFAULT_CLASSES: the yazi explorer and spotatui), which always belong.
@@ -13,7 +13,7 @@
 
 DEFAULT_CLASSES='^(Explorer|Spotatui)$'
 STATE=${XDG_RUNTIME_DIR:-/tmp}/bspscratch
-IDS=$STATE/ids COUNTER=$STATE/counter
+IDS=$STATE/ids
 mkdir -p "$STATE"; touch "$IDS"
 
 dec() { printf '%d\n' "$1"; }                       # 0x… (bspc) → decimal (xdotool)
@@ -50,19 +50,40 @@ case $1 in
             bspc node "$f" --state floating --flag sticky=on --layer above --flag hidden=on
         fi
         ;;
-    cycle)
+    toggle)
         prune
-        f=$(bspc query -N -n focused 2>/dev/null)
-        if [[ -n $f ]] && is_member "$f"; then
-            bspc node "$f" --flag hidden=on
-            exit 0
-        fi
         mapfile -t list < <(members)
         (( ${#list[@]} )) || { dunstify -a scratchpad -u low "Scratchpad is empty" "super + shift + \\ moves a window in"; exit 0; }
-        n=$(cat "$COUNTER" 2>/dev/null || echo 0)
-        id=${list[n % ${#list[@]}]}
-        echo $(( (n + 1) % ${#list[@]} )) >"$COUNTER"
-        show "$(printf '0x%08X' "$id")"
+        hex() { printf '0x%08X' "$1"; }
+        visible=0
+        for id in "${list[@]}"; do
+            [[ -z $(bspc query -N -n "$(hex "$id").hidden" 2>/dev/null) ]] && visible=1
+        done
+        for id in "${list[@]}"; do
+            if (( visible )); then
+                bspc node "$(hex "$id")" --flag hidden=on
+            else
+                bspc node "$(hex "$id")" --to-monitor focused --flag hidden=off \
+                    --flag sticky=on --state floating --layer above
+            fi
+        done
+        (( visible )) && exit 0
+        # lay them out side by side (grid, max 3 per row) over 90% x 80% of
+        # the monitor, so they don't all stack in the centre
+        read -r mx my mw mh < <(bspc query -T -m focused |
+            jq -r '.rectangle | "\(.x) \(.y) \(.width) \(.height)"')
+        n=${#list[@]} gap=12
+        cols=$(( n < 3 ? n : 3 )) rows=$(( (n + 2) / 3 ))
+        aw=$(( mw * 90 / 100 )) ah=$(( mh * 80 / 100 ))
+        ax=$(( mx + (mw - aw) / 2 )) ay=$(( my + (mh - ah) / 2 ))
+        w=$(( (aw - gap * (cols - 1)) / cols )) h=$(( (ah - gap * (rows - 1)) / rows ))
+        for i in "${!list[@]}"; do
+            c=$(( i % cols )) r=$(( i / cols ))
+            xdotool windowsize "${list[i]}" "$w" "$h" \
+                windowmove "${list[i]}" $(( ax + c * (w + gap) )) $(( ay + r * (h + gap) ))
+        done
+        # focus the last one shown so the keyboard lands somewhere useful
+        bspc node "$(hex "${list[-1]}")" --focus
         ;;
     *)
         sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
