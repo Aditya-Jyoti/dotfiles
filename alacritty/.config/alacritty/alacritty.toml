@@ -32,11 +32,12 @@ osc52 = "OnlyCopy"
 
 # Every plain window opens a zellij session (alacritty -e … still runs just
 # that command). Closing the window ends the session instead of leaving it
-# running in the background — detach with Alt d first to keep one. Falls back
-# to the plain shell if zellij isn't installed.
+# running in the background (detach with Alt d to keep it running), but its
+# layout + commands are saved, so it can be resurrected later from the session
+# manager (Alt o). Falls back to the plain shell if zellij isn't installed.
 [terminal.shell]
 program = "/bin/sh"
-args = ["-c", "command -v zellij >/dev/null && exec zellij options --on-force-close quit --session-serialization false; exec \"$SHELL\""]
+args = ["-c", "command -v zellij >/dev/null && exec zellij options --on-force-close quit; exec \"$SHELL\""]
 
 [[keyboard.bindings]]
 key = "Return"
