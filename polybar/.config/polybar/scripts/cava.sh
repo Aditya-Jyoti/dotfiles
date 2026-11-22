@@ -5,7 +5,7 @@
 # audio plays; cava's sleep_timer stops it from
 # doing any work during silence. Own config — your ~/.config/cava is untouched.
 
-CHARS=${1:-14}          # width in characters
+CHARS=${1:-${VIS_CHARS:-32}}   # width in characters (launch.sh sets VIS_CHARS per monitor)
 BARS=$(( CHARS * 2 ))
 cfg=$(mktemp -t polybar-cava.XXXXXX)
 trap 'rm -f "$cfg"; kill 0' EXIT
