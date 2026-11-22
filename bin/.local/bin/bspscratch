@@ -87,19 +87,19 @@ case $1 in
         for id in "${list[@]}"; do
             [[ -z $(bspc query -N -n "$(hex "$id").hidden" 2>/dev/null) ]] && visible=1
         done
-        for id in "${list[@]}"; do
-            if (( visible )); then
-                bspc node "$(hex "$id")" --flag hidden=on
-                dim_off
-            else
-                bspc node "$(hex "$id")" --to-monitor focused --flag hidden=off \
-                    --flag sticky=on --state floating --layer above
-            fi
-        done
-        (( visible )) && exit 0
+        if (( visible )); then
+            for id in "${list[@]}"; do bspc node "$(hex "$id")" --flag hidden=on; done
+            dim_off
+            exit 0
+        fi
+        # 1. blur first: start the backdrop and wait until it's on screen
         dim_on
-        # lay them out side by side (grid, max 3 per row) over 90% x 80% of
-        # the monitor, so they don't all stack in the centre
+        for _ in $(seq 20); do
+            xdotool search --class '^ScratchDim$' >/dev/null 2>&1 && break
+            sleep 0.05
+        done
+        # 2. size + place the windows while still hidden (grid, max 3 per row,
+        #    over 90% x 80% of the monitor), so nothing jumps after appearing
         read -r mx my mw mh < <(bspc query -T -m focused |
             jq -r '.rectangle | "\(.x) \(.y) \(.width) \(.height)"')
         n=${#list[@]} gap=12
@@ -108,11 +108,13 @@ case $1 in
         ax=$(( mx + (mw - aw) / 2 )) ay=$(( my + (mh - ah) / 2 ))
         w=$(( (aw - gap * (cols - 1)) / cols )) h=$(( (ah - gap * (rows - 1)) / rows ))
         for i in "${!list[@]}"; do
+            bspc node "$(hex "${list[i]}")" --to-monitor focused --flag sticky=on --state floating --layer above
             c=$(( i % cols )) r=$(( i / cols ))
             xdotool windowsize "${list[i]}" "$w" "$h" \
                 windowmove "${list[i]}" $(( ax + c * (w + gap) )) $(( ay + r * (h + gap) ))
         done
-        # focus the last one shown so the keyboard lands somewhere useful
+        # 3. then show them, focusing the last one
+        for id in "${list[@]}"; do bspc node "$(hex "$id")" --flag hidden=off; done
         bspc node "$(hex "${list[-1]}")" --focus
         ;;
     sync)
