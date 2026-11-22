@@ -1,0 +1,7 @@
+# spotatui — Spotify TUI (lives in the scratchpad: super + \)
+# The "Terminal (ANSI)" preset draws with the terminal's 16 colours, which
+# alacritty gets from matugen — so spotatui follows the wallpaper live,
+# without restarting. Edit while spotatui is closed (it rewrites this file
+# when you save from its in-app settings, Alt+,).
+theme:
+  preset: "Terminal (ANSI)"

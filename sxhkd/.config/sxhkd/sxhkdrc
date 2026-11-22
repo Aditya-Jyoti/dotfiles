@@ -44,6 +44,10 @@ super + alt + w
 # SCRATCHPADS / APPLICATIONS
 #################################################
 
+# Scratchpad: floating zellij session above everything, on any workspace
+super + backslash
+    scratch
+
 # Terminal file explorer
 super + e
     scratchpad Explorer 'alacritty --class Explorer --title "Explorer" -e yazi'

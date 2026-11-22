@@ -13,3 +13,7 @@ cava/.config/cava/shaders/
 cava/.config/cava/themes/solarized_dark
 cava/.config/cava/themes/tricolor
 zellij/.config/zellij/themes/
+# spotatui: credentials/state it writes next to its config
+spotatui/.config/spotatui/*credentials*
+spotatui/.config/spotatui/youtube_playlists.yml
+spotatui/.config/spotatui/visualizer.yml

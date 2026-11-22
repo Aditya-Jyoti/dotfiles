@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# scratch — the scratchpad: one floating window holding a persistent zellij
+# session ("scratchpad"). It floats above everything, follows you to any
+# workspace/monitor, and keeps running while hidden (music keeps playing).
+#
+#   scratch             toggle (super + \)
+#   scratch add <cmd>   open <cmd> as a new pane inside the scratchpad
+#                       e.g. scratch add yazi · scratch add spotatui
+#
+# Inside it's normal zellij: Alt n new pane, Alt t new tab, Alt z fullscreen a
+# pane, Alt w floating panes, Alt q close. Closing the window only detaches —
+# everything in it stays alive and comes back on the next toggle.
+
+CLASS=Scratchpad
+SESSION=scratchpad
+SCALE=80   # % of the monitor
+
+# Size + centre the window on the focused monitor
+place() {
+    local id=$1 mx my mw mh w h
+    read -r mx my mw mh < <(bspc query -T -m focused |
+        jq -r '.rectangle | "\(.x) \(.y) \(.width) \(.height)"')
+    w=$(( mw * SCALE / 100 )) h=$(( mh * SCALE / 100 ))
+    xdotool windowsize "$id" "$w" "$h" windowmove "$id" $(( mx + (mw - w) / 2 )) $(( my + (mh - h) / 2 ))
+}
+
+if [[ ${1:-} == add ]]; then
+    shift
+    [[ $# -gt 0 ]] || { echo "usage: scratch add <command…>" >&2; exit 2; }
+    zellij attach -b "$SESSION" >/dev/null 2>&1
+    exec zellij --session "$SESSION" run --cwd "$HOME" -- "$@"
+fi
+
+id=$(xdotool search --classname "^$CLASS$" 2>/dev/null | head -n1)
+
+if [[ -z $id ]]; then
+    bspc rule -a "$CLASS" -o state=floating sticky=on layer=above
+    # term = alacritty with the right font size for this monitor
+    # first ever start: spotatui in the first pane (when installed)
+    first=()
+    command -v spotatui >/dev/null && first=(-- spotatui)
+    setsid -f term --class "$CLASS" --title Scratchpad \
+        -e zellij attach -c "$SESSION" "${first[@]}" >/dev/null 2>&1
+    # wait for the window, then size it
+    for _ in $(seq 30); do
+        id=$(xdotool search --classname "^$CLASS$" 2>/dev/null | head -n1)
+        [[ -n $id ]] && { place "$id"; exit 0; }
+        sleep 0.1
+    done
+    exit 0
+fi
+
+hidden=$(bspc query -N -n "$id.hidden" 2>/dev/null)
+focused=$(bspc query -N -n focused 2>/dev/null)
+
+if [[ -n $hidden ]]; then
+    bspc node "$id" --to-monitor focused --flag hidden=off --flag sticky=on --layer above
+    place "$id"
+    bspc node "$id" --focus
+elif [[ $((id)) -eq $((focused)) ]]; then
+    bspc node "$id" --flag hidden=on
+else
+    # visible but behind focus → bring it forward instead of hiding
+    bspc node "$id" --to-monitor focused --focus
+fi
